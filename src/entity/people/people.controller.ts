@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { PeopleService } from './people.service';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
@@ -13,8 +22,8 @@ export class PeopleController {
   }
 
   @Get()
-  findAll() {
-    return this.peopleService.findAll();
+  findAll(@Query('order') order = '0', @Query('count') count = '10') {
+    return this.peopleService.findAll(+order, +count);
   }
 
   @Get(':id')
@@ -22,7 +31,7 @@ export class PeopleController {
     return this.peopleService.findOne(+id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id') id: string, @Body() updatePersonDto: UpdatePersonDto) {
     return this.peopleService.update(+id, updatePersonDto);
   }

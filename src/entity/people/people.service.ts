@@ -4,23 +4,33 @@ import { UpdatePersonDto } from './dto/update-person.dto';
 
 @Injectable()
 export class PeopleService {
+  idCounter = 0;
+  database = [];
   create(createPersonDto: CreatePersonDto) {
-    return 'This action adds a new person';
+    const objToAdd = { id: ++this.idCounter };
+    Object.assign(objToAdd, createPersonDto);
+    this.database.push(objToAdd);
+    return objToAdd;
   }
 
-  findAll() {
-    return `This action returns all people`;
+  findAll(order: number, count: number) {
+    const arr = this.database.slice(order);
+    return arr.slice(0, count);
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} person`;
+    return this.database.find((elem) => elem.id === id);
   }
 
   update(id: number, updatePersonDto: UpdatePersonDto) {
-    return `This action updates a #${id} person`;
+    const indexObj = this.database.findIndex((elem) => elem.id === id);
+    Object.assign(this.database[indexObj], updatePersonDto);
+    return this.database[indexObj];
   }
 
   remove(id: number) {
-    return `This action removes a #${id} person`;
+    const indexObj = this.database.findIndex((elem) => elem.id === id);
+    this.database.splice(indexObj, 1);
+    return 'Deleted';
   }
 }
