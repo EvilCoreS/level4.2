@@ -1,27 +1,44 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreatePersonDto {
   @ApiProperty()
-  private readonly name: string = '1';
+  @IsNotEmpty()
+  @IsString()
+  private readonly name: string;
 
   @ApiProperty()
-  private readonly height: string = '1';
+  @IsNotEmpty()
+  @IsString()
+  private readonly height: string;
 
   @ApiProperty()
-  private readonly mass: string = '1';
+  @IsNotEmpty()
+  @IsString()
+  private readonly mass: string;
 
   @ApiProperty()
-  private readonly hair_color: string = '1';
+  @IsNotEmpty()
+  @IsString()
+  private readonly hair_color: string;
 
   @ApiProperty()
-  private readonly skin_color: string = '1';
+  @IsNotEmpty()
+  @IsString()
+  private readonly skin_color: string;
 
   @ApiProperty()
-  private readonly eye_color: string = '1';
+  @IsNotEmpty()
+  @IsString()
+  private readonly eye_color: string;
 
   @ApiProperty()
-  private readonly birth_year: string = '1';
+  @IsNotEmpty()
+  @IsString()
+  private readonly birth_year: string;
 
   @ApiProperty()
-  private readonly gender: string = '1';
+  @IsNotEmpty()
+  @IsString()
+  private readonly gender: string;
 }

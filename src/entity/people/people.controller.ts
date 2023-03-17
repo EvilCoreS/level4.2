@@ -7,8 +7,8 @@ import {
   Delete,
   Put,
   Query,
-  BadRequestException,
   ParseIntPipe,
+  ValidationPipe,
 } from '@nestjs/common';
 import { PeopleService } from './people.service';
 import { CreatePersonDto } from './dto/create-person.dto';
@@ -19,21 +19,16 @@ export class PeopleController {
   constructor(private readonly peopleService: PeopleService) {}
 
   @Post()
-  create(@Body() createPersonDto: CreatePersonDto) {
-    const iterObj = Object.keys(new CreatePersonDto());
-    const checker = iterObj.every((name) => {
-      return name in createPersonDto;
-    });
-    if (checker) return this.peopleService.create(createPersonDto);
-    else throw new BadRequestException('Missing properties');
+  async create(@Body(ValidationPipe) createPersonDto: CreatePersonDto) {
+    return this.peopleService.create(createPersonDto);
   }
 
   @Get()
   findAll(
-    @Query('order', ParseIntPipe) order: number,
+    @Query('offset', ParseIntPipe) offset: number,
     @Query('count', ParseIntPipe) count: number,
   ) {
-    return this.peopleService.findAll(order, count);
+    return this.peopleService.findAll(offset, count);
   }
 
   @Get(':id')
@@ -46,13 +41,7 @@ export class PeopleController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePersonDto: UpdatePersonDto,
   ) {
-    const keys = Object.keys(updatePersonDto);
-    const checker = keys.every((name) => {
-      const iterObj = Object.keys(new UpdatePersonDto());
-      return iterObj.includes(name);
-    });
-    if (checker) return this.peopleService.update(id, updatePersonDto);
-    else throw new BadRequestException('Incorrect property name');
+    return this.peopleService.update(id, updatePersonDto);
   }
 
   @Delete(':id')

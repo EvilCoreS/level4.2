@@ -1,46 +1,40 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
+import dataSource from '../../database/db.config';
+import { plainToClass, plainToClassFromExist } from 'class-transformer';
+import { Person } from './entities/person.entity';
 
 @Injectable()
 export class PeopleService {
-  idCounter = 0;
-  database = [];
-  create(createPersonDto: CreatePersonDto) {
-    const objToAdd = { id: ++this.idCounter };
-    Object.assign(objToAdd, createPersonDto);
-    this.database.push(objToAdd);
-    return objToAdd;
+  async create(createPersonDto: CreatePersonDto) {
+    return await dataSource.manager.save(plainToClass(Person, createPersonDto));
   }
 
-  findAll(order = 0, count = 10) {
-    const arr = this.database.slice(order);
-    return arr.slice(0, count);
+  async findAll(offset = 0, count = 10) {
+    return await dataSource.manager.find(Person, {
+      skip: offset,
+      take: count,
+    });
   }
 
-  findOne(id: number) {
-    const item = this.database.find((elem) => elem.id === id);
-    if (item !== undefined) return item;
+  async findOne(id: number) {
+    const person = await dataSource.manager.findOneBy(Person, { id: id });
+    if (!!person) return person;
     else throw new NotFoundException('Incorrect id');
   }
 
-  update(id: number, updatePersonDto: UpdatePersonDto) {
-    const indexObj = this.database.findIndex((elem) => elem.id === id);
-    if (indexObj >= 0) {
-      Object.assign(this.database[indexObj], updatePersonDto);
-      return this.database[indexObj];
+  async update(id: number, updatePersonDto: UpdatePersonDto) {
+    const person = await dataSource.manager.findOneBy(Person, { id: id });
+    if (!!person) {
+      return await dataSource.manager.save(
+        plainToClassFromExist(person, updatePersonDto),
+      );
     } else throw new NotFoundException('Incorrect id');
   }
 
-  remove(id: number) {
-    const indexObj = this.database.findIndex((elem) => elem.id === id);
-    if (indexObj >= 0) {
-      this.database.splice(indexObj, 1);
-      return 'Deleted';
-    } else throw new NotFoundException('Incorrect id');
+  async remove(id: number) {
+    const person = await dataSource.manager.findOneBy(Person, { id: id });
+    return await dataSource.manager.remove(person);
   }
 }
