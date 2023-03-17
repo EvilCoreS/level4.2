@@ -2,26 +2,26 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePersonDto {
   @ApiProperty()
-  name: string;
+  private readonly name: string = '1';
 
   @ApiProperty()
-  height: string;
+  private readonly height: string = '1';
 
   @ApiProperty()
-  mass: string;
+  private readonly mass: string = '1';
 
   @ApiProperty()
-  hair_color: string;
+  private readonly hair_color: string = '1';
 
   @ApiProperty()
-  skin_color: string;
+  private readonly skin_color: string = '1';
 
   @ApiProperty()
-  eye_color: string;
+  private readonly eye_color: string = '1';
 
   @ApiProperty()
-  birth_year: string;
+  private readonly birth_year: string = '1';
 
   @ApiProperty()
-  gender: string;
+  private readonly gender: string = '1';
 }

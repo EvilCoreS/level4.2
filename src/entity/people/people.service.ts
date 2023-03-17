@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
 
@@ -13,24 +17,30 @@ export class PeopleService {
     return objToAdd;
   }
 
-  findAll(order: number, count: number) {
+  findAll(order = 0, count = 10) {
     const arr = this.database.slice(order);
     return arr.slice(0, count);
   }
 
   findOne(id: number) {
-    return this.database.find((elem) => elem.id === id);
+    const item = this.database.find((elem) => elem.id === id);
+    if (item !== undefined) return item;
+    else throw new NotFoundException('Incorrect id');
   }
 
   update(id: number, updatePersonDto: UpdatePersonDto) {
     const indexObj = this.database.findIndex((elem) => elem.id === id);
-    Object.assign(this.database[indexObj], updatePersonDto);
-    return this.database[indexObj];
+    if (indexObj >= 0) {
+      Object.assign(this.database[indexObj], updatePersonDto);
+      return this.database[indexObj];
+    } else throw new NotFoundException('Incorrect id');
   }
 
   remove(id: number) {
     const indexObj = this.database.findIndex((elem) => elem.id === id);
-    this.database.splice(indexObj, 1);
-    return 'Deleted';
+    if (indexObj >= 0) {
+      this.database.splice(indexObj, 1);
+      return 'Deleted';
+    } else throw new NotFoundException('Incorrect id');
   }
 }
