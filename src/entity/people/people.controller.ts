@@ -18,6 +18,7 @@ import { UpdatePersonDto } from './dto/update-person.dto';
 import { ApiConsumes } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { uploadFilesSizeConfig } from '../../common/config/upload-files-size.config';
+import { PeopleRelationsDto } from './dto/people-relations.dto';
 
 @Controller('people')
 export class PeopleController {
@@ -62,5 +63,13 @@ export class PeopleController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.peopleService.remove(id);
+  }
+
+  @Put('/relation/:id')
+  async addRelations(
+    @Body(ValidationPipe) dto: PeopleRelationsDto,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.peopleService.addRelations(dto, id);
   }
 }

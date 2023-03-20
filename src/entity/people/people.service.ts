@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
 import dataSource from '../../database/db.config';
@@ -7,6 +11,7 @@ import { Person } from './entities/person.entity';
 import { ImagesService, PATH_TO_PUBLIC } from '../../images/images.service';
 import { Image } from '../../images/entities/image.entity';
 import * as fs from 'fs';
+import { PeopleRelationsDto } from './dto/people-relations.dto';
 
 @Injectable()
 export class PeopleService {
@@ -71,5 +76,13 @@ export class PeopleService {
     const deleteInfo = await dataSource.manager.remove(person);
     await this.imageService.deleteImages(deleteInfo.images);
     return deleteInfo;
+  }
+
+  async addRelations(dto: PeopleRelationsDto, id: number) {
+    const findTarget = await dataSource.manager.findOneBy(Person, { id });
+    if (!findTarget) throw new BadRequestException('Incorrect id');
+    return await dataSource.manager.save(
+      plainToClassFromExist(findTarget, dto),
+    );
   }
 }

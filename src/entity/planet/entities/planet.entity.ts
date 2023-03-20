@@ -4,13 +4,14 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Image } from '../../../images/entities/image.entity';
-import { Planet } from '../../planet/entities/planet.entity';
+import { Person } from '../../people/entities/person.entity';
 
-@Entity('people')
-export class Person {
+@Entity()
+export class Planet {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -18,34 +19,33 @@ export class Person {
   name: string;
 
   @Column()
-  height: string;
+  rotation_period: string;
 
   @Column()
-  mass: string;
+  orbital_period: string;
 
   @Column()
-  hair_color: string;
+  diameter: string;
 
   @Column()
-  skin_color: string;
+  climate: string;
 
   @Column()
-  eye_color: string;
+  gravity: string;
 
   @Column()
-  birth_year: string;
+  terrain: string;
 
   @Column()
-  gender: string;
+  surface_water: string;
+
+  @Column()
+  population: string;
 
   @ManyToMany(() => Image, { cascade: true, eager: true })
   @JoinTable()
   images: Image[];
 
-  @ManyToOne(() => Planet, (planet) => planet.residents, {
-    cascade: true,
-    eager: true,
-    onDelete: 'SET NULL',
-  })
-  homeworld: Planet;
+  @OneToMany(() => Person, (person) => person.homeworld)
+  residents?: Person[];
 }

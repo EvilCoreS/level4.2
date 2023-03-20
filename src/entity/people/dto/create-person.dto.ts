@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsEmpty, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { Planet } from '../../planet/entities/planet.entity';
+import { CreatePlanetDto } from '../../planet/dto/create-planet.dto';
 
 export class CreatePersonDto {
   @ApiProperty({ example: 'test' })
@@ -42,6 +44,10 @@ export class CreatePersonDto {
   @IsString()
   private readonly gender: string;
 
-  @ApiProperty({ type: 'string', format: 'binary', isArray: true })
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    isArray: true,
+  })
   private readonly files: Express.Multer.File[];
 }
