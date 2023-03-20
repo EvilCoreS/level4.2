@@ -2,13 +2,23 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
 import dataSource from '../../database/db.config';
-import { plainToClass, plainToClassFromExist } from 'class-transformer';
+import { plainToClassFromExist, plainToInstance } from 'class-transformer';
 import { Person } from './entities/person.entity';
+import { ImagesService, PATH_TO_PUBLIC } from '../../images/images.service';
+import { Image } from '../../images/entities/image.entity';
+import * as fs from 'fs';
 
 @Injectable()
 export class PeopleService {
-  async create(createPersonDto: CreatePersonDto) {
-    return await dataSource.manager.save(plainToClass(Person, createPersonDto));
+  constructor(private imageService: ImagesService) {}
+  async create(createPersonDto: CreatePersonDto, files: Express.Multer.File[]) {
+    const filesInfo = plainToInstance(
+      Image,
+      this.imageService.uploadFile(files),
+    );
+    const objToSave = plainToInstance(Person, createPersonDto);
+    objToSave.images = filesInfo;
+    return await dataSource.manager.save(objToSave);
   }
 
   async findAll(offset = 0, count = 10) {
@@ -20,21 +30,46 @@ export class PeopleService {
 
   async findOne(id: number) {
     const person = await dataSource.manager.findOneBy(Person, { id: id });
-    if (!!person) return person;
-    else throw new NotFoundException('Incorrect id');
+    if (!person) throw new NotFoundException('Incorrect id');
+    return person;
   }
 
-  async update(id: number, updatePersonDto: UpdatePersonDto) {
+  async update(
+    id: number,
+    updatePersonDto: UpdatePersonDto,
+    files: Express.Multer.File[],
+  ) {
     const person = await dataSource.manager.findOneBy(Person, { id: id });
-    if (!!person) {
-      return await dataSource.manager.save(
-        plainToClassFromExist(person, updatePersonDto),
+    if (!person) throw new NotFoundException('Incorrect id');
+    const newImages = plainToInstance(
+      Image,
+      this.imageService.uploadFile(files),
+    );
+    newImages.map((newImage) => {
+      const findIndex = person.images.findIndex(
+        (image) => image.original_name === newImage.original_name,
       );
-    } else throw new NotFoundException('Incorrect id');
+      if (findIndex >= 0) {
+        try {
+          fs.unlinkSync(
+            `./${PATH_TO_PUBLIC}/${person.images[findIndex].file_name}`,
+          );
+        } catch (e) {
+          console.log(e);
+        }
+        plainToClassFromExist(person.images[findIndex], newImage);
+      } else person.images.push(newImage);
+    });
+    return await dataSource.manager.save(
+      plainToClassFromExist(person, updatePersonDto),
+    );
   }
 
   async remove(id: number) {
     const person = await dataSource.manager.findOneBy(Person, { id: id });
-    return await dataSource.manager.remove(person);
+    if (!person) throw new NotFoundException('Incorrect id');
+    const deleteInfo = await dataSource.manager.remove(person);
+    await this.imageService.deleteImages(deleteInfo.images);
+    return deleteInfo;
   }
 }

@@ -9,18 +9,29 @@ import {
   Query,
   ParseIntPipe,
   ValidationPipe,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { PeopleService } from './people.service';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
+import { ApiConsumes } from '@nestjs/swagger';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { uploadFilesSizeConfig } from '../../common/config/upload-files-size.config';
 
 @Controller('people')
 export class PeopleController {
   constructor(private readonly peopleService: PeopleService) {}
 
   @Post()
-  async create(@Body(ValidationPipe) createPersonDto: CreatePersonDto) {
-    return this.peopleService.create(createPersonDto);
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('files'))
+  async create(
+    @Body(ValidationPipe) createPersonDto: CreatePersonDto,
+    @UploadedFiles(uploadFilesSizeConfig(500000))
+    files: Express.Multer.File[],
+  ) {
+    return this.peopleService.create(createPersonDto, files);
   }
 
   @Get()
@@ -36,12 +47,16 @@ export class PeopleController {
     return this.peopleService.findOne(id);
   }
 
+  @UseInterceptors(FilesInterceptor('files'))
+  @ApiConsumes('multipart/form-data')
   @Put(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePersonDto: UpdatePersonDto,
+    @UploadedFiles(uploadFilesSizeConfig(500000))
+    files: Express.Multer.File[],
   ) {
-    return this.peopleService.update(id, updatePersonDto);
+    return this.peopleService.update(id, updatePersonDto, files);
   }
 
   @Delete(':id')

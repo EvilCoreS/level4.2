@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Image } from '../../../images/entities/image.entity';
 
 @Entity('people')
 export class Person {
@@ -28,4 +35,8 @@ export class Person {
 
   @Column()
   gender: string;
+
+  @ManyToMany(() => Image, { cascade: true, eager: true })
+  @JoinTable()
+  images: Image[];
 }
