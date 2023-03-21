@@ -31,11 +31,17 @@ export class PeopleService {
     return await dataSource.manager.find(Person, {
       skip: offset,
       take: count,
+      loadEagerRelations: false,
+      relations: ['images', 'homeworld', 'films', 'species'],
     });
   }
 
   async findOne(id: number) {
-    const person = await dataSource.manager.findOneBy(Person, { id: id });
+    const person = await dataSource.manager.findOne(Person, {
+      where: { id },
+      loadEagerRelations: false,
+      relations: ['images', 'homeworld', 'films', 'species'],
+    });
     if (!person) throw new NotFoundException('Incorrect id');
     return person;
   }

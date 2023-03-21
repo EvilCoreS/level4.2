@@ -8,6 +8,7 @@ import {
 import { Image } from '../../../images/entities/image.entity';
 import { Person } from '../../people/entities/person.entity';
 import { Planet } from '../../planet/entities/planet.entity';
+import { Species } from '../../species/entities/species.entity';
 
 @Entity()
 export class Film {
@@ -47,4 +48,9 @@ export class Film {
   })
   @JoinTable()
   planets: Planet[];
+
+  @ManyToMany(() => Species, (species) => species.films, {
+    onDelete: 'CASCADE',
+  })
+  species: Species[];
 }

@@ -32,7 +32,7 @@ export class FilmsService {
     return await dataSource.manager.find(Film, {
       skip: offset,
       take: count,
-      relations: ['images', 'characters', 'planets'],
+      relations: ['images', 'characters', 'planets', 'species'],
       loadEagerRelations: false,
     });
   }
@@ -40,7 +40,7 @@ export class FilmsService {
   async findOne(id: number) {
     const film = await dataSource.manager.findOne(Film, {
       where: { id },
-      relations: ['images', 'characters', 'planets'],
+      relations: ['images', 'characters', 'planets', 'species'],
       loadEagerRelations: false,
     });
     if (!film) throw new BadRequestException('Incorrect id');

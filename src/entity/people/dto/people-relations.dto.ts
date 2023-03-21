@@ -11,5 +11,11 @@ export class PeopleRelationsDto {
   @IsOptional()
   @IsArray()
   @IsNumber({}, { each: true })
-  films: number[];
+  films?: number[];
+
+  @ApiProperty({ type: 'number', isArray: true })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  species?: number[];
 }

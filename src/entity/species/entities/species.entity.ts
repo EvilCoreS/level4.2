@@ -1,18 +1,20 @@
 import {
   Column,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Image } from '../../../images/entities/image.entity';
 import { Planet } from '../../planet/entities/planet.entity';
+import { Person } from '../../people/entities/person.entity';
 import { Film } from '../../films/entities/film.entity';
-import { Species } from '../../species/entities/species.entity';
 
-@Entity('people')
-export class Person {
+@Entity()
+export class Species {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -20,49 +22,47 @@ export class Person {
   name: string;
 
   @Column()
-  height: string;
+  classification: string;
 
   @Column()
-  mass: string;
+  designation: string;
 
   @Column()
-  hair_color: string;
+  average_height: string;
 
   @Column()
-  skin_color: string;
+  skin_colors: string;
 
   @Column()
-  eye_color: string;
+  hair_colors: string;
 
   @Column()
-  birth_year: string;
+  eye_colors: string;
 
   @Column()
-  gender: string;
+  average_lifespan: string;
+
+  @Column()
+  language: string;
 
   @ManyToMany(() => Image, { cascade: true, eager: true })
   @JoinTable()
   images: Image[];
 
-  @ManyToOne(() => Planet, (planet) => planet.residents, {
-    cascade: true,
-    eager: true,
-    onDelete: 'SET NULL',
-  })
+  @ManyToOne(() => Planet, { eager: true, onDelete: 'SET NULL' })
   homeworld: Planet;
 
-  @ManyToMany(() => Film, (film) => film.characters, {
+  @ManyToMany(() => Person, (person) => person.species, {
+    onDelete: 'CASCADE',
+  })
+  @JoinTable()
+  people: Person;
+
+  @ManyToMany(() => Film, (films) => films.species, {
     cascade: true,
     eager: true,
     onDelete: 'CASCADE',
   })
   @JoinTable()
   films: Film[];
-
-  @ManyToMany(() => Species, (species) => species.people, {
-    cascade: true,
-    eager: true,
-    onDelete: 'CASCADE',
-  })
-  species: Species[];
 }

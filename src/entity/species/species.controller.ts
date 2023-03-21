@@ -6,34 +6,35 @@ import {
   Param,
   Delete,
   UseInterceptors,
-  UploadedFiles,
   ValidationPipe,
-  Put,
-  ParseIntPipe,
+  UploadedFiles,
   Query,
   DefaultValuePipe,
+  ParseIntPipe,
+  Put,
 } from '@nestjs/common';
-import { PlanetService } from './planet.service';
-import { CreatePlanetDto } from './dto/create-planet.dto';
-import { UpdatePlanetDto } from './dto/update-planet.dto';
-import { ApiConsumes, ApiQuery } from '@nestjs/swagger';
+import { SpeciesService } from './species.service';
+import { CreateSpeciesDto } from './dto/create-species.dto';
+import { UpdateSpeciesDto } from './dto/update-species.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiConsumes } from '@nestjs/swagger';
 import { uploadFilesSizeConfig } from '../../common/config/upload-files-size.config';
-import { PlanetRelationsDto } from './dto/planet-relations.dto';
 import { OptionalQueryDecorator } from '../../common/decorators/optional-query.decorator';
+import { PlanetRelationsDto } from "../planet/dto/planet-relations.dto";
+import { SpeciesRelationsDto } from "./dto/species-relations.dto";
 
-@Controller('planet')
-export class PlanetController {
-  constructor(private readonly planetService: PlanetService) {}
+@Controller('species')
+export class SpeciesController {
+  constructor(private readonly speciesService: SpeciesService) {}
 
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FilesInterceptor('files'))
   @Post()
+  @UseInterceptors(FilesInterceptor('files'))
+  @ApiConsumes('multipart/form-data')
   create(
-    @Body(ValidationPipe) createPlanetDto: CreatePlanetDto,
+    @Body(ValidationPipe) createSpeciesDto: CreateSpeciesDto,
     @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
   ) {
-    return this.planetService.create(createPlanetDto, files);
+    return this.speciesService.create(createSpeciesDto, files);
   }
 
   @Get()
@@ -42,12 +43,12 @@ export class PlanetController {
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
     @Query('count', new DefaultValuePipe(10), ParseIntPipe) count: number,
   ) {
-    return this.planetService.findAll(offset, count);
+    return this.speciesService.findAll(offset, count);
   }
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.planetService.findOne(id);
+    return this.speciesService.findOne(id);
   }
 
   @Put(':id')
@@ -55,22 +56,22 @@ export class PlanetController {
   @UseInterceptors(FilesInterceptor('files'))
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Body(ValidationPipe) updatePlanetDto: UpdatePlanetDto,
+    @Body(ValidationPipe) updateSpeciesDto: UpdateSpeciesDto,
     @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
   ) {
-    return this.planetService.update(id, updatePlanetDto, files);
+    return this.speciesService.update(id, updateSpeciesDto, files);
   }
 
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.planetService.remove(id);
+    return this.speciesService.remove(id);
   }
 
   @Put('/relation/:id')
   async addRelations(
-    @Body(ValidationPipe) dto: PlanetRelationsDto,
+    @Body(ValidationPipe) dto: SpeciesRelationsDto,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.planetService.addRelations(dto, id);
+    return this.speciesService.addRelations(dto, id);
   }
 }
