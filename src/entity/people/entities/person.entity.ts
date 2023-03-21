@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Image } from '../../../images/entities/image.entity';
 import { Planet } from '../../planet/entities/planet.entity';
+import { Film } from '../../films/entities/film.entity';
 
 @Entity('people')
 export class Person {
@@ -48,4 +49,12 @@ export class Person {
     onDelete: 'SET NULL',
   })
   homeworld: Planet;
+
+  @ManyToMany(() => Film, (film) => film.characters, {
+    cascade: true,
+    eager: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinTable()
+  films: Film[];
 }

@@ -11,6 +11,7 @@ import {
   ValidationPipe,
   UseInterceptors,
   UploadedFiles,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { PeopleService } from './people.service';
 import { CreatePersonDto } from './dto/create-person.dto';
@@ -19,6 +20,7 @@ import { ApiConsumes } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { uploadFilesSizeConfig } from '../../common/config/upload-files-size.config';
 import { PeopleRelationsDto } from './dto/people-relations.dto';
+import { OptionalQueryDecorator } from '../../common/decorators/optional-query.decorator';
 
 @Controller('people')
 export class PeopleController {
@@ -36,9 +38,10 @@ export class PeopleController {
   }
 
   @Get()
+  @OptionalQueryDecorator()
   findAll(
-    @Query('offset', ParseIntPipe) offset: number,
-    @Query('count', ParseIntPipe) count: number,
+    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
+    @Query('count', new DefaultValuePipe(10), ParseIntPipe) count: number,
   ) {
     return this.peopleService.findAll(offset, count);
   }

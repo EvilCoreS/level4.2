@@ -1,9 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional } from 'class-validator';
+import { IsArray, IsNumber, IsOptional } from 'class-validator';
 
 export class PeopleRelationsDto {
   @ApiProperty()
   @IsOptional()
   @IsNumber()
   homeworld?: number;
+
+  @ApiProperty({ type: 'number', isArray: true })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  films: number[];
 }

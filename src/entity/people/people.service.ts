@@ -12,6 +12,7 @@ import { ImagesService, PATH_TO_PUBLIC } from '../../images/images.service';
 import { Image } from '../../images/entities/image.entity';
 import * as fs from 'fs';
 import { PeopleRelationsDto } from './dto/people-relations.dto';
+import { relationsSaver } from '../../common/functions/relations-saver';
 
 @Injectable()
 export class PeopleService {
@@ -79,10 +80,6 @@ export class PeopleService {
   }
 
   async addRelations(dto: PeopleRelationsDto, id: number) {
-    const findTarget = await dataSource.manager.findOneBy(Person, { id });
-    if (!findTarget) throw new BadRequestException('Incorrect id');
-    return await dataSource.manager.save(
-      plainToClassFromExist(findTarget, dto),
-    );
+    return await relationsSaver(Person, dto, id);
   }
 }

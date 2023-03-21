@@ -3,37 +3,38 @@ import {
   Get,
   Post,
   Body,
+  Patch,
   Param,
   Delete,
   UseInterceptors,
   UploadedFiles,
   ValidationPipe,
-  Put,
-  ParseIntPipe,
   Query,
+  ParseIntPipe,
+  Put,
   DefaultValuePipe,
 } from '@nestjs/common';
-import { PlanetService } from './planet.service';
-import { CreatePlanetDto } from './dto/create-planet.dto';
-import { UpdatePlanetDto } from './dto/update-planet.dto';
-import { ApiConsumes, ApiQuery } from '@nestjs/swagger';
+import { FilmsService } from './films.service';
+import { CreateFilmDto } from './dto/create-film.dto';
+import { UpdateFilmDto } from './dto/update-film.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiConsumes } from '@nestjs/swagger';
 import { uploadFilesSizeConfig } from '../../common/config/upload-files-size.config';
-import { PlanetRelationsDto } from './dto/planet-relations.dto';
 import { OptionalQueryDecorator } from '../../common/decorators/optional-query.decorator';
+import { FilmRelationsDto } from './dto/film-relations.dto';
 
-@Controller('planet')
-export class PlanetController {
-  constructor(private readonly planetService: PlanetService) {}
+@Controller('films')
+export class FilmsController {
+  constructor(private readonly filmsService: FilmsService) {}
 
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FilesInterceptor('files'))
   @Post()
+  @UseInterceptors(FilesInterceptor('files'))
+  @ApiConsumes('multipart/form-data')
   create(
-    @Body(ValidationPipe) createPlanetDto: CreatePlanetDto,
+    @Body(ValidationPipe) createFilmDto: CreateFilmDto,
     @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
   ) {
-    return this.planetService.create(createPlanetDto, files);
+    return this.filmsService.create(createFilmDto, files);
   }
 
   @Get()
@@ -42,35 +43,35 @@ export class PlanetController {
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
     @Query('count', new DefaultValuePipe(10), ParseIntPipe) count: number,
   ) {
-    return this.planetService.findAll(offset, count);
+    return this.filmsService.findAll(offset, count);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.planetService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.filmsService.findOne(id);
   }
 
   @Put(':id')
-  @ApiConsumes('multipart/form-data')
   @UseInterceptors(FilesInterceptor('files'))
+  @ApiConsumes('multipart/form-data')
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Body(ValidationPipe) updatePlanetDto: UpdatePlanetDto,
+    @Body(ValidationPipe) updateFilmDto: UpdateFilmDto,
     @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
   ) {
-    return this.planetService.update(id, updatePlanetDto, files);
+    return this.filmsService.update(id, updateFilmDto, files);
   }
 
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.planetService.remove(id);
+    return this.filmsService.remove(id);
   }
 
   @Put('/relation/:id')
-  async addRelations(
-    @Body(ValidationPipe) dto: PlanetRelationsDto,
+  addRelations(
+    @Body(ValidationPipe) dto: FilmRelationsDto,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.planetService.addRelations(dto, id);
+    return this.filmsService.addRelations(dto, id);
   }
 }

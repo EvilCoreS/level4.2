@@ -11,6 +11,9 @@ import dataSource from '../../database/db.config';
 import { ImagesService, PATH_TO_PUBLIC } from '../../images/images.service';
 import { Planet } from './entities/planet.entity';
 import { PlanetRelationsDto } from './dto/planet-relations.dto';
+import { Person } from '../people/entities/person.entity';
+import fs from 'fs';
+import { relationsSaver } from '../../common/functions/relations-saver';
 @Injectable()
 export class PlanetService {
   constructor(private imageService: ImagesService) {}
@@ -25,10 +28,12 @@ export class PlanetService {
     return await dataSource.manager.save(objToSave);
   }
 
-  async findAll() {
+  async findAll(offset = 0, count = 10) {
     return await dataSource.manager.find(Planet, {
       loadEagerRelations: false,
-      relations: ['residents', 'images'],
+      relations: ['residents', 'images', 'films'],
+      take: count,
+      skip: offset,
     });
   }
 
@@ -36,7 +41,7 @@ export class PlanetService {
     return await dataSource.manager.findOne(Planet, {
       where: { id },
       loadEagerRelations: false,
-      relations: ['residents', 'images'],
+      relations: ['residents', 'images', 'films'],
     });
   }
 
@@ -80,15 +85,6 @@ export class PlanetService {
   }
 
   async addRelations(dto: PlanetRelationsDto, id: number) {
-    const findTarget = await dataSource.manager.findOneBy(Planet, { id });
-    if (!findTarget) throw new BadRequestException('Incorrect id');
-    const toAddObj = plainToClassFromExist(findTarget, dto);
-    toAddObj.residents = toAddObj.residents.map((item) => {
-      return plainToClass(Person, { id: item });
-    });
-    return await dataSource.manager.save(toAddObj);
+    return await relationsSaver(Planet, dto, id);
   }
 }
-
-import { Person } from '../people/entities/person.entity';
-import fs from 'fs';
