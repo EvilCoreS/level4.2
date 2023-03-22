@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePlanetDto } from './dto/create-planet.dto';
 import { UpdatePlanetDto } from './dto/update-planet.dto';
 import { plainToClassFromExist, plainToInstance } from 'class-transformer';
@@ -9,9 +9,13 @@ import { Planet } from './entities/planet.entity';
 import { PlanetRelationsDto } from './dto/planet-relations.dto';
 import fs from 'fs';
 import { relationsSaver } from '../../common/functions/relations-saver';
+import { PlanetRepository } from './planet.repository';
 @Injectable()
 export class PlanetService {
-  constructor(private imageService: ImagesService) {}
+  constructor(
+    private imageService: ImagesService,
+    @Inject(PlanetRepository) private planetRepository: PlanetRepository,
+  ) {}
 
   async create(createPlanetDto: CreatePlanetDto, files: Express.Multer.File[]) {
     const filesInfo = plainToInstance(
@@ -20,26 +24,23 @@ export class PlanetService {
     );
     const objToSave = plainToInstance(Planet, createPlanetDto);
     objToSave.images = filesInfo;
-    return await dataSource.manager.save(objToSave);
+    return await this.planetRepository.save(objToSave);
   }
 
   async findAll(offset = 0, count = 10) {
-    return await dataSource.manager.find(Planet, {
-      loadEagerRelations: false,
-      relations: ['residents', 'images', 'films'],
-      take: count,
-      skip: offset,
-    });
+    return await this.planetRepository.findAll(offset, count, [
+      'residents',
+      'images',
+      'films',
+    ]);
   }
 
   async findOne(id: number) {
-    const planet = await dataSource.manager.findOne(Planet, {
-      where: { id },
-      loadEagerRelations: false,
-      relations: ['residents', 'images', 'films'],
-    });
-    if (!planet) throw new NotFoundException('Incorrect id');
-    return planet;
+    return await this.planetRepository.findOneById(id, [
+      'residents',
+      'images',
+      'films',
+    ]);
   }
 
   async update(
@@ -47,8 +48,7 @@ export class PlanetService {
     updatePlanetDto: UpdatePlanetDto,
     files: Express.Multer.File[],
   ) {
-    const planet = await dataSource.manager.findOneBy(Planet, { id });
-    if (!planet) throw new NotFoundException('Incorrect id');
+    const planet = await this.planetRepository.findOneById(id, ['images']);
     const newImages = plainToInstance(
       Image,
       this.imageService.uploadFile(files),
@@ -68,15 +68,13 @@ export class PlanetService {
         plainToClassFromExist(planet.images[findIndex], newImage);
       } else planet.images.push(newImage);
     });
-    return await dataSource.manager.save(
+    return await this.planetRepository.save(
       plainToClassFromExist(planet, updatePlanetDto),
     );
   }
 
   async remove(id: number) {
-    const planet = await dataSource.manager.findOneBy(Planet, { id });
-    if (!planet) throw new NotFoundException('Incorrect id');
-    const deleteInfo = await dataSource.manager.remove(planet);
+    const deleteInfo = await this.planetRepository.remove(id);
     await this.imageService.deleteImages(deleteInfo.images);
     return deleteInfo;
   }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateFilmDto } from './dto/create-film.dto';
 import { UpdateFilmDto } from './dto/update-film.dto';
 import { plainToClassFromExist, plainToInstance } from 'class-transformer';
@@ -9,10 +9,14 @@ import { Film } from './entities/film.entity';
 import fs from 'fs';
 import { FilmRelationsDto } from './dto/film-relations.dto';
 import { relationsSaver } from '../../common/functions/relations-saver';
+import { FilmRepository } from './film.repository';
 
 @Injectable()
 export class FilmsService {
-  constructor(private imageService: ImagesService) {}
+  constructor(
+    private imageService: ImagesService,
+    @Inject(FilmRepository) private filmRepository: FilmRepository,
+  ) {}
 
   async create(createFilmDto: CreateFilmDto, files: Express.Multer.File[]) {
     const filesInfo = plainToInstance(
@@ -21,40 +25,29 @@ export class FilmsService {
     );
     const objToSave = plainToInstance(Film, createFilmDto);
     objToSave.images = filesInfo;
-    return await dataSource.manager.save(objToSave);
+    return await this.filmRepository.save(objToSave);
   }
 
   async findAll(offset = 0, count = 10) {
-    return await dataSource.manager.find(Film, {
-      skip: offset,
-      take: count,
-      relations: [
-        'images',
-        'characters',
-        'planets',
-        'species',
-        'starships',
-        'vehicles',
-      ],
-      loadEagerRelations: false,
-    });
+    return await this.filmRepository.findAll(offset, count, [
+      'images',
+      'characters',
+      'planets',
+      'species',
+      'starships',
+      'vehicles',
+    ]);
   }
 
   async findOne(id: number) {
-    const film = await dataSource.manager.findOne(Film, {
-      where: { id },
-      relations: [
-        'images',
-        'characters',
-        'planets',
-        'species',
-        'starships',
-        'vehicles',
-      ],
-      loadEagerRelations: false,
-    });
-    if (!film) throw new NotFoundException('Incorrect id');
-    return film;
+    return await this.filmRepository.findOneById(id, [
+      'images',
+      'characters',
+      'planets',
+      'species',
+      'starships',
+      'vehicles',
+    ]);
   }
 
   async update(
@@ -62,8 +55,7 @@ export class FilmsService {
     updateFilmDto: UpdateFilmDto,
     files: Express.Multer.File[],
   ) {
-    const film = await dataSource.manager.findOneBy(Film, { id });
-    if (!film) throw new NotFoundException('Incorrect id');
+    const film = await this.filmRepository.findOneById(id, ['images']);
     const newImages = plainToInstance(
       Image,
       this.imageService.uploadFile(files),
@@ -83,15 +75,13 @@ export class FilmsService {
         plainToClassFromExist(film.images[findIndex], newImage);
       } else film.images.push(newImage);
     });
-    return await dataSource.manager.save(
+    return await this.filmRepository.save(
       plainToClassFromExist(film, updateFilmDto),
     );
   }
 
   async remove(id: number) {
-    const film = await dataSource.manager.findOneBy(Film, { id: id });
-    if (!film) throw new NotFoundException('Incorrect id');
-    const deleteInfo = await dataSource.manager.remove(film);
+    const deleteInfo = await this.filmRepository.remove(id);
     await this.imageService.deleteImages(deleteInfo.images);
     return deleteInfo;
   }

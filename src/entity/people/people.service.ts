@@ -1,18 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
-import dataSource from '../../database/db.config';
 import { plainToClassFromExist, plainToInstance } from 'class-transformer';
-import { Person } from './entities/person.entity';
 import { ImagesService, PATH_TO_PUBLIC } from '../../images/images.service';
 import { Image } from '../../images/entities/image.entity';
 import * as fs from 'fs';
 import { PeopleRelationsDto } from './dto/people-relations.dto';
 import { relationsSaver } from '../../common/functions/relations-saver';
+import { PersonRepository } from './person.repository';
+import { Person } from './entities/person.entity';
 
 @Injectable()
 export class PeopleService {
-  constructor(private imageService: ImagesService) {}
+  constructor(
+    private imageService: ImagesService,
+    @Inject(PersonRepository)
+    private personRepository: PersonRepository,
+  ) {}
   async create(createPersonDto: CreatePersonDto, files: Express.Multer.File[]) {
     const filesInfo = plainToInstance(
       Image,
@@ -20,40 +24,29 @@ export class PeopleService {
     );
     const objToSave = plainToInstance(Person, createPersonDto);
     objToSave.images = filesInfo;
-    return await dataSource.manager.save(objToSave);
+    return await this.personRepository.save(objToSave);
   }
 
   async findAll(offset = 0, count = 10) {
-    return await dataSource.manager.find(Person, {
-      skip: offset,
-      take: count,
-      loadEagerRelations: false,
-      relations: [
-        'images',
-        'homeworld',
-        'films',
-        'species',
-        'starships',
-        'vehicles',
-      ],
-    });
+    return await this.personRepository.findAll(offset, count, [
+      'images',
+      'homeworld',
+      'films',
+      'species',
+      'starships',
+      'vehicles',
+    ]);
   }
 
   async findOne(id: number) {
-    const person = await dataSource.manager.findOne(Person, {
-      where: { id },
-      loadEagerRelations: false,
-      relations: [
-        'images',
-        'homeworld',
-        'films',
-        'species',
-        'starships',
-        'vehicles',
-      ],
-    });
-    if (!person) throw new NotFoundException('Incorrect id');
-    return person;
+    return await this.personRepository.findOneById(id, [
+      'images',
+      'homeworld',
+      'films',
+      'species',
+      'starships',
+      'vehicles',
+    ]);
   }
 
   async update(
@@ -61,8 +54,7 @@ export class PeopleService {
     updatePersonDto: UpdatePersonDto,
     files: Express.Multer.File[],
   ) {
-    const person = await dataSource.manager.findOneBy(Person, { id: id });
-    if (!person) throw new NotFoundException('Incorrect id');
+    const person = await this.personRepository.findOneById(id, ['images']);
     const newImages = plainToInstance(
       Image,
       this.imageService.uploadFile(files),
@@ -82,15 +74,13 @@ export class PeopleService {
         plainToClassFromExist(person.images[findIndex], newImage);
       } else person.images.push(newImage);
     });
-    return await dataSource.manager.save(
+    return await this.personRepository.save(
       plainToClassFromExist(person, updatePersonDto),
     );
   }
 
   async remove(id: number) {
-    const person = await dataSource.manager.findOneBy(Person, { id: id });
-    if (!person) throw new NotFoundException('Incorrect id');
-    const deleteInfo = await dataSource.manager.remove(person);
+    const deleteInfo = await this.personRepository.remove(id);
     await this.imageService.deleteImages(deleteInfo.images);
     return deleteInfo;
   }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateStarshipDto } from './dto/create-starship.dto';
 import { UpdateStarshipDto } from './dto/update-starship.dto';
 import { plainToClassFromExist, plainToInstance } from 'class-transformer';
@@ -9,10 +9,14 @@ import { Starship } from './entities/starship.entity';
 import fs from 'fs';
 import { relationsSaver } from '../../common/functions/relations-saver';
 import { StarshipsRelationsDto } from './dto/starships-relations.dto';
+import { StarshipRepository } from './starships.repository';
 
 @Injectable()
 export class StarshipsService {
-  constructor(private imageService: ImagesService) {}
+  constructor(
+    private imageService: ImagesService,
+    @Inject(StarshipRepository) private starshipRepository: StarshipRepository,
+  ) {}
   async create(dto: CreateStarshipDto, files: Express.Multer.File[]) {
     const filesInfo = plainToInstance(
       Image,
@@ -20,26 +24,23 @@ export class StarshipsService {
     );
     const objToSave = plainToInstance(Starship, dto);
     objToSave.images = filesInfo;
-    return await dataSource.manager.save(objToSave);
+    return await this.starshipRepository.save(objToSave);
   }
 
   async findAll(offset = 0, count = 10) {
-    return await dataSource.manager.find(Starship, {
-      loadEagerRelations: false,
-      relations: ['pilots', 'images', 'films'],
-      take: count,
-      skip: offset,
-    });
+    return await this.starshipRepository.findAll(offset, count, [
+      'pilots',
+      'images',
+      'films',
+    ]);
   }
 
   async findOne(id: number) {
-    const starship = await dataSource.manager.findOne(Starship, {
-      where: { id },
-      loadEagerRelations: false,
-      relations: ['pilots', 'images', 'films'],
-    });
-    if (!starship) throw new NotFoundException('Incorrect id');
-    return starship;
+    return await this.starshipRepository.findOneById(id, [
+      'pilots',
+      'images',
+      'films',
+    ]);
   }
 
   async update(
@@ -47,8 +48,7 @@ export class StarshipsService {
     dto: UpdateStarshipDto,
     files: Express.Multer.File[],
   ) {
-    const starship = await dataSource.manager.findOneBy(Starship, { id });
-    if (!starship) throw new NotFoundException('Incorrect id');
+    const starship = await this.starshipRepository.findOneById(id, ['images']);
     const newImages = plainToInstance(
       Image,
       this.imageService.uploadFile(files),
@@ -68,13 +68,13 @@ export class StarshipsService {
         plainToClassFromExist(starship.images[findIndex], newImage);
       } else starship.images.push(newImage);
     });
-    return await dataSource.manager.save(plainToClassFromExist(starship, dto));
+    return await this.starshipRepository.save(
+      plainToClassFromExist(starship, dto),
+    );
   }
 
   async remove(id: number) {
-    const starship = await dataSource.manager.findOneBy(Starship, { id });
-    if (!starship) throw new NotFoundException('Incorrect id');
-    const deleteInfo = await dataSource.manager.remove(starship);
+    const deleteInfo = await this.starshipRepository.remove(id);
     await this.imageService.deleteImages(deleteInfo.images);
     return deleteInfo;
   }

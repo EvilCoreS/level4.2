@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSpeciesDto } from './dto/create-species.dto';
 import { UpdateSpeciesDto } from './dto/update-species.dto';
 import { plainToClassFromExist, plainToInstance } from 'class-transformer';
@@ -9,10 +9,15 @@ import { Species } from './entities/species.entity';
 import fs from 'fs';
 import { relationsSaver } from '../../common/functions/relations-saver';
 import { SpeciesRelationsDto } from './dto/species-relations.dto';
+import { SpeciesRepository } from './species.repository';
+import { of } from 'rxjs';
 
 @Injectable()
 export class SpeciesService {
-  constructor(private imageService: ImagesService) {}
+  constructor(
+    private imageService: ImagesService,
+    @Inject(SpeciesRepository) private speciesRepository: SpeciesRepository,
+  ) {}
 
   async create(
     createSpeciesDto: CreateSpeciesDto,
@@ -24,26 +29,25 @@ export class SpeciesService {
     );
     const objToSave = plainToInstance(Species, createSpeciesDto);
     objToSave.images = filesInfo;
-    return await dataSource.manager.save(objToSave);
+    return await this.speciesRepository.save(objToSave);
   }
 
   async findAll(offset = 0, count = 10) {
-    return await dataSource.manager.find(Species, {
-      loadEagerRelations: false,
-      relations: ['people', 'images', 'films', 'homeworld'],
-      take: count,
-      skip: offset,
-    });
+    return await this.speciesRepository.findAll(offset, count, [
+      'people',
+      'images',
+      'films',
+      'homeworld',
+    ]);
   }
 
   async findOne(id: number) {
-    const species = await dataSource.manager.findOne(Species, {
-      where: { id },
-      loadEagerRelations: false,
-      relations: ['people', 'images', 'films', 'homeworld'],
-    });
-    if (!species) throw new NotFoundException('Incorrect id');
-    return species;
+    return await this.speciesRepository.findOneById(id, [
+      'people',
+      'images',
+      'films',
+      'homeworld',
+    ]);
   }
 
   async update(
@@ -51,8 +55,7 @@ export class SpeciesService {
     updateSpeciesDto: UpdateSpeciesDto,
     files: Express.Multer.File[],
   ) {
-    const species = await dataSource.manager.findOneBy(Species, { id });
-    if (!species) throw new NotFoundException('Incorrect id');
+    const species = await this.speciesRepository.findOneById(id);
     const newImages = plainToInstance(
       Image,
       this.imageService.uploadFile(files),
@@ -72,15 +75,13 @@ export class SpeciesService {
         plainToClassFromExist(species.images[findIndex], newImage);
       } else species.images.push(newImage);
     });
-    return await dataSource.manager.save(
+    return await this.speciesRepository.save(
       plainToClassFromExist(species, updateSpeciesDto),
     );
   }
 
   async remove(id: number) {
-    const species = await dataSource.manager.findOneBy(Species, { id });
-    if (!species) throw new NotFoundException('Incorrect id');
-    const deleteInfo = await dataSource.manager.remove(species);
+    const deleteInfo = await this.speciesRepository.remove(id);
     await this.imageService.deleteImages(deleteInfo.images);
     return deleteInfo;
   }

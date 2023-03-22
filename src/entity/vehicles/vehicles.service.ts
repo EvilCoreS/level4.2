@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { ImagesService, PATH_TO_PUBLIC } from '../../images/images.service';
@@ -9,10 +9,14 @@ import { Vehicle } from './entities/vehicle.entity';
 import fs from 'fs';
 import { relationsSaver } from '../../common/functions/relations-saver';
 import { VehiclesRelationsDto } from './dto/vehicles-relations.dto';
+import { VehiclesRepository } from './vehicles.repository';
 
 @Injectable()
 export class VehiclesService {
-  constructor(private imageService: ImagesService) {}
+  constructor(
+    private imageService: ImagesService,
+    @Inject(VehiclesRepository) private vehicleRepository: VehiclesRepository,
+  ) {}
 
   async create(dto: CreateVehicleDto, files: Express.Multer.File[]) {
     const filesInfo = plainToInstance(
@@ -21,26 +25,23 @@ export class VehiclesService {
     );
     const objToSave = plainToInstance(Vehicle, dto);
     objToSave.images = filesInfo;
-    return await dataSource.manager.save(objToSave);
+    return await this.vehicleRepository.save(objToSave);
   }
 
   async findAll(offset = 0, count = 10) {
-    return await dataSource.manager.find(Vehicle, {
-      loadEagerRelations: false,
-      relations: ['pilots', 'images', 'films'],
-      take: count,
-      skip: offset,
-    });
+    return await this.vehicleRepository.findAll(offset, count, [
+      'pilots',
+      'images',
+      'films',
+    ]);
   }
 
   async findOne(id: number) {
-    const vehicle = await dataSource.manager.findOne(Vehicle, {
-      where: { id },
-      loadEagerRelations: false,
-      relations: ['pilots', 'images', 'films'],
-    });
-    if (!vehicle) throw new NotFoundException('Incorrect id');
-    return vehicle;
+    return await this.vehicleRepository.findOneById(id, [
+      'pilots',
+      'images',
+      'films',
+    ]);
   }
 
   async update(
@@ -48,8 +49,7 @@ export class VehiclesService {
     dto: UpdateVehicleDto,
     files: Express.Multer.File[],
   ) {
-    const vehicle = await dataSource.manager.findOneBy(Vehicle, { id });
-    if (!vehicle) throw new NotFoundException('Incorrect id');
+    const vehicle = await this.vehicleRepository.findOneById(id);
     const newImages = plainToInstance(
       Image,
       this.imageService.uploadFile(files),
@@ -69,13 +69,13 @@ export class VehiclesService {
         plainToClassFromExist(vehicle.images[findIndex], newImage);
       } else vehicle.images.push(newImage);
     });
-    return await dataSource.manager.save(plainToClassFromExist(vehicle, dto));
+    return await this.vehicleRepository.save(
+      plainToClassFromExist(vehicle, dto),
+    );
   }
 
   async remove(id: number) {
-    const vehicle = await dataSource.manager.findOneBy(Vehicle, { id });
-    if (!vehicle) throw new NotFoundException('Incorrect id');
-    const deleteInfo = await dataSource.manager.remove(vehicle);
+    const deleteInfo = await this.vehicleRepository.remove(id);
     await this.imageService.deleteImages(deleteInfo.images);
     return deleteInfo;
   }
