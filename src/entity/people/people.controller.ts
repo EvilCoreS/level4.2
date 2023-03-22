@@ -12,6 +12,7 @@ import {
   UseInterceptors,
   UploadedFiles,
   DefaultValuePipe,
+  UseFilters,
 } from '@nestjs/common';
 import { PeopleService } from './people.service';
 import { CreatePersonDto } from './dto/create-person.dto';
@@ -21,6 +22,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { uploadFilesSizeConfig } from '../../common/config/upload-files-size.config';
 import { PeopleRelationsDto } from './dto/people-relations.dto';
 import { OptionalQueryDecorator } from '../../common/decorators/optional-query.decorator';
+import { EntityNotFoundExceptionFilter } from '../../common/exceptions/entity-not-found.exception';
 
 @Controller('people')
 export class PeopleController {
@@ -31,7 +33,7 @@ export class PeopleController {
   @UseInterceptors(FilesInterceptor('files'))
   async create(
     @Body(ValidationPipe) createPersonDto: CreatePersonDto,
-    @UploadedFiles(uploadFilesSizeConfig(500000))
+    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE']))
     files: Express.Multer.File[],
   ) {
     return this.peopleService.create(createPersonDto, files);
@@ -57,7 +59,7 @@ export class PeopleController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePersonDto: UpdatePersonDto,
-    @UploadedFiles(uploadFilesSizeConfig(500000))
+    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE']))
     files: Express.Multer.File[],
   ) {
     return this.peopleService.update(id, updatePersonDto, files);
@@ -68,6 +70,7 @@ export class PeopleController {
     return this.peopleService.remove(id);
   }
 
+  @UseFilters(EntityNotFoundExceptionFilter)
   @Put('/relation/:id')
   async addRelations(
     @Body(ValidationPipe) dto: PeopleRelationsDto,

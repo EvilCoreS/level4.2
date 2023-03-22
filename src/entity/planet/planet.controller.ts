@@ -31,7 +31,8 @@ export class PlanetController {
   @Post()
   create(
     @Body(ValidationPipe) createPlanetDto: CreatePlanetDto,
-    @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
+    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE']))
+    files: Express.Multer.File[],
   ) {
     return this.planetService.create(createPlanetDto, files);
   }
@@ -56,7 +57,8 @@ export class PlanetController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body(ValidationPipe) updatePlanetDto: UpdatePlanetDto,
-    @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
+    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE']))
+    files: Express.Multer.File[],
   ) {
     return this.planetService.update(id, updatePlanetDto, files);
   }

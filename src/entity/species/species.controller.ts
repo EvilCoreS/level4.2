@@ -20,8 +20,8 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes } from '@nestjs/swagger';
 import { uploadFilesSizeConfig } from '../../common/config/upload-files-size.config';
 import { OptionalQueryDecorator } from '../../common/decorators/optional-query.decorator';
-import { PlanetRelationsDto } from "../planet/dto/planet-relations.dto";
-import { SpeciesRelationsDto } from "./dto/species-relations.dto";
+import { PlanetRelationsDto } from '../planet/dto/planet-relations.dto';
+import { SpeciesRelationsDto } from './dto/species-relations.dto';
 
 @Controller('species')
 export class SpeciesController {
@@ -32,7 +32,8 @@ export class SpeciesController {
   @ApiConsumes('multipart/form-data')
   create(
     @Body(ValidationPipe) createSpeciesDto: CreateSpeciesDto,
-    @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
+    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE']))
+    files: Express.Multer.File[],
   ) {
     return this.speciesService.create(createSpeciesDto, files);
   }
@@ -57,7 +58,8 @@ export class SpeciesController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body(ValidationPipe) updateSpeciesDto: UpdateSpeciesDto,
-    @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
+    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE']))
+    files: Express.Multer.File[],
   ) {
     return this.speciesService.update(id, updateSpeciesDto, files);
   }

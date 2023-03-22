@@ -23,8 +23,8 @@ import { CreateStarshipDto } from '../starships/dto/create-starship.dto';
 import { uploadFilesSizeConfig } from '../../common/config/upload-files-size.config';
 import { OptionalQueryDecorator } from '../../common/decorators/optional-query.decorator';
 import { UpdateStarshipDto } from '../starships/dto/update-starship.dto';
-import { StarshipsRelationsDto } from "../starships/dto/starships-relations.dto";
-import { VehiclesRelationsDto } from "./dto/vehicles-relations.dto";
+import { StarshipsRelationsDto } from '../starships/dto/starships-relations.dto';
+import { VehiclesRelationsDto } from './dto/vehicles-relations.dto';
 
 @Controller('vehicles')
 export class VehiclesController {
@@ -35,7 +35,8 @@ export class VehiclesController {
   @Post()
   create(
     @Body(ValidationPipe) dto: CreateVehicleDto,
-    @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
+    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE']))
+    files: Express.Multer.File[],
   ) {
     return this.vehiclesService.create(dto, files);
   }
@@ -60,7 +61,8 @@ export class VehiclesController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body(ValidationPipe) dto: UpdateVehicleDto,
-    @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
+    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE']))
+    files: Express.Multer.File[],
   ) {
     return this.vehiclesService.update(id, dto, files);
   }

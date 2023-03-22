@@ -32,7 +32,8 @@ export class FilmsController {
   @ApiConsumes('multipart/form-data')
   create(
     @Body(ValidationPipe) createFilmDto: CreateFilmDto,
-    @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
+    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE']))
+    files: Express.Multer.File[],
   ) {
     return this.filmsService.create(createFilmDto, files);
   }
@@ -57,7 +58,7 @@ export class FilmsController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body(ValidationPipe) updateFilmDto: UpdateFilmDto,
-    @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
+    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE'])) files: Express.Multer.File[],
   ) {
     return this.filmsService.update(id, updateFilmDto, files);
   }

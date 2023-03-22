@@ -33,7 +33,8 @@ export class StarshipsController {
   @Post()
   create(
     @Body(ValidationPipe) dto: CreateStarshipDto,
-    @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
+    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE']))
+    files: Express.Multer.File[],
   ) {
     return this.starshipsService.create(dto, files);
   }
@@ -58,7 +59,8 @@ export class StarshipsController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body(ValidationPipe) dto: UpdateStarshipDto,
-    @UploadedFiles(uploadFilesSizeConfig(500000)) files: Express.Multer.File[],
+    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE']))
+    files: Express.Multer.File[],
   ) {
     return this.starshipsService.update(id, dto, files);
   }
