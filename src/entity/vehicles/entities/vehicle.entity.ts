@@ -1,20 +1,16 @@
 import {
   Column,
   Entity,
-  JoinColumn,
   JoinTable,
   ManyToMany,
-  ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Image } from '../../../images/entities/image.entity';
-import { Planet } from '../../planet/entities/planet.entity';
 import { Person } from '../../people/entities/person.entity';
 import { Film } from '../../films/entities/film.entity';
 
 @Entity()
-export class Species {
+export class Vehicle {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -22,42 +18,45 @@ export class Species {
   name: string;
 
   @Column()
-  classification: string;
+  model: string;
 
   @Column()
-  designation: string;
+  manufacturer: string;
 
   @Column()
-  average_height: string;
+  cost_in_credits: string;
 
   @Column()
-  skin_colors: string;
+  length: string;
 
   @Column()
-  hair_colors: string;
+  max_atmosphering_speed: string;
 
   @Column()
-  eye_colors: string;
+  crew: string;
 
   @Column()
-  average_lifespan: string;
+  passengers: string;
 
   @Column()
-  language: string;
+  cargo_capacity: string;
+
+  @Column()
+  consumables: string;
+
+  @Column()
+  vehicle_class: string;
 
   @ManyToMany(() => Image, { cascade: true, eager: true })
   @JoinTable()
   images: Image[];
 
-  @ManyToOne(() => Planet, { eager: true, onDelete: 'SET NULL' })
-  homeworld: Planet;
-
-  @ManyToMany(() => Person, (person) => person.species, {
+  @ManyToMany(() => Person, (person) => person.vehicles, {
     onDelete: 'CASCADE',
   })
-  people: Person;
+  pilots: Person[];
 
-  @ManyToMany(() => Film, (films) => films.species, {
+  @ManyToMany(() => Film, (film) => film.vehicles, {
     cascade: true,
     eager: true,
     onDelete: 'CASCADE',

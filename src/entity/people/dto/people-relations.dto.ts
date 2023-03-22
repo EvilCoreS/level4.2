@@ -18,4 +18,16 @@ export class PeopleRelationsDto {
   @IsArray()
   @IsNumber({}, { each: true })
   species?: number[];
+
+  @ApiProperty({ type: 'number', isArray: true })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  starships?: number[];
+
+  @ApiProperty({ type: 'number', isArray: true })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  vehicles?: number[];
 }

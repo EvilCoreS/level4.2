@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
 import dataSource from '../../database/db.config';
@@ -32,7 +28,14 @@ export class PeopleService {
       skip: offset,
       take: count,
       loadEagerRelations: false,
-      relations: ['images', 'homeworld', 'films', 'species'],
+      relations: [
+        'images',
+        'homeworld',
+        'films',
+        'species',
+        'starships',
+        'vehicles',
+      ],
     });
   }
 
@@ -40,7 +43,14 @@ export class PeopleService {
     const person = await dataSource.manager.findOne(Person, {
       where: { id },
       loadEagerRelations: false,
-      relations: ['images', 'homeworld', 'films', 'species'],
+      relations: [
+        'images',
+        'homeworld',
+        'films',
+        'species',
+        'starships',
+        'vehicles',
+      ],
     });
     if (!person) throw new NotFoundException('Incorrect id');
     return person;

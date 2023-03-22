@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSpeciesDto } from './dto/create-species.dto';
 import { UpdateSpeciesDto } from './dto/update-species.dto';
 import { plainToClassFromExist, plainToInstance } from 'class-transformer';
@@ -37,11 +37,13 @@ export class SpeciesService {
   }
 
   async findOne(id: number) {
-    return await dataSource.manager.findOne(Species, {
+    const species = await dataSource.manager.findOne(Species, {
       where: { id },
       loadEagerRelations: false,
       relations: ['people', 'images', 'films', 'homeworld'],
     });
+    if (!species) throw new NotFoundException('Incorrect id');
+    return species;
   }
 
   async update(
@@ -50,7 +52,7 @@ export class SpeciesService {
     files: Express.Multer.File[],
   ) {
     const species = await dataSource.manager.findOneBy(Species, { id });
-    if (!species) throw new BadRequestException('Incorrect id');
+    if (!species) throw new NotFoundException('Incorrect id');
     const newImages = plainToInstance(
       Image,
       this.imageService.uploadFile(files),
@@ -77,7 +79,7 @@ export class SpeciesService {
 
   async remove(id: number) {
     const species = await dataSource.manager.findOneBy(Species, { id });
-    if (!species) throw new BadRequestException('Incorrect id');
+    if (!species) throw new NotFoundException('Incorrect id');
     const deleteInfo = await dataSource.manager.remove(species);
     await this.imageService.deleteImages(deleteInfo.images);
     return deleteInfo;

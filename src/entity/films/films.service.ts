@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateFilmDto } from './dto/create-film.dto';
 import { UpdateFilmDto } from './dto/update-film.dto';
 import { plainToClassFromExist, plainToInstance } from 'class-transformer';
@@ -32,7 +28,14 @@ export class FilmsService {
     return await dataSource.manager.find(Film, {
       skip: offset,
       take: count,
-      relations: ['images', 'characters', 'planets', 'species'],
+      relations: [
+        'images',
+        'characters',
+        'planets',
+        'species',
+        'starships',
+        'vehicles',
+      ],
       loadEagerRelations: false,
     });
   }
@@ -40,10 +43,17 @@ export class FilmsService {
   async findOne(id: number) {
     const film = await dataSource.manager.findOne(Film, {
       where: { id },
-      relations: ['images', 'characters', 'planets', 'species'],
+      relations: [
+        'images',
+        'characters',
+        'planets',
+        'species',
+        'starships',
+        'vehicles',
+      ],
       loadEagerRelations: false,
     });
-    if (!film) throw new BadRequestException('Incorrect id');
+    if (!film) throw new NotFoundException('Incorrect id');
     return film;
   }
 
@@ -53,7 +63,7 @@ export class FilmsService {
     files: Express.Multer.File[],
   ) {
     const film = await dataSource.manager.findOneBy(Film, { id });
-    if (!film) throw new BadRequestException('Incorrect id');
+    if (!film) throw new NotFoundException('Incorrect id');
     const newImages = plainToInstance(
       Image,
       this.imageService.uploadFile(files),

@@ -1,5 +1,5 @@
 import dataSource from '../../database/db.config';
-import { BadRequestException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { plainToClassFromExist } from 'class-transformer';
 import { EntityTarget } from 'typeorm';
 
@@ -12,7 +12,7 @@ export async function relationsSaver<T extends EntityTarget<{ id: number }>, U>(
     where: { id },
     loadEagerRelations: false,
   });
-  if (!findTarget) throw new BadRequestException('Incorrect id');
+  if (!findTarget) throw new NotFoundException('Incorrect id');
   const toAddObj = plainToClassFromExist(findTarget, dto);
   Object.keys(toAddObj).map((key) => {
     if (Array.isArray(toAddObj[key])) {

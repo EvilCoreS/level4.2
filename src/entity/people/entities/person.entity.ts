@@ -10,6 +10,8 @@ import { Image } from '../../../images/entities/image.entity';
 import { Planet } from '../../planet/entities/planet.entity';
 import { Film } from '../../films/entities/film.entity';
 import { Species } from '../../species/entities/species.entity';
+import { Starship } from '../../starships/entities/starship.entity';
+import { Vehicle } from '../../vehicles/entities/vehicle.entity';
 
 @Entity('people')
 export class Person {
@@ -64,5 +66,22 @@ export class Person {
     eager: true,
     onDelete: 'CASCADE',
   })
+  @JoinTable()
   species: Species[];
+
+  @ManyToMany(() => Starship, (starships) => starships.pilots, {
+    cascade: true,
+    eager: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinTable()
+  starships: Starship[];
+
+  @ManyToMany(() => Vehicle, (vehicles) => vehicles.pilots, {
+    cascade: true,
+    eager: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinTable()
+  vehicles: Vehicle[];
 }

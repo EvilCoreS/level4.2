@@ -1,17 +1,12 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePlanetDto } from './dto/create-planet.dto';
 import { UpdatePlanetDto } from './dto/update-planet.dto';
-import {
-  plainToClass,
-  plainToClassFromExist,
-  plainToInstance,
-} from 'class-transformer';
+import { plainToClassFromExist, plainToInstance } from 'class-transformer';
 import { Image } from '../../images/entities/image.entity';
 import dataSource from '../../database/db.config';
 import { ImagesService, PATH_TO_PUBLIC } from '../../images/images.service';
 import { Planet } from './entities/planet.entity';
 import { PlanetRelationsDto } from './dto/planet-relations.dto';
-import { Person } from '../people/entities/person.entity';
 import fs from 'fs';
 import { relationsSaver } from '../../common/functions/relations-saver';
 @Injectable()
@@ -38,11 +33,13 @@ export class PlanetService {
   }
 
   async findOne(id: number) {
-    return await dataSource.manager.findOne(Planet, {
+    const planet = await dataSource.manager.findOne(Planet, {
       where: { id },
       loadEagerRelations: false,
       relations: ['residents', 'images', 'films'],
     });
+    if (!planet) throw new NotFoundException('Incorrect id');
+    return planet;
   }
 
   async update(
@@ -51,7 +48,7 @@ export class PlanetService {
     files: Express.Multer.File[],
   ) {
     const planet = await dataSource.manager.findOneBy(Planet, { id });
-    if (!planet) throw new BadRequestException('Incorrect id');
+    if (!planet) throw new NotFoundException('Incorrect id');
     const newImages = plainToInstance(
       Image,
       this.imageService.uploadFile(files),
@@ -78,7 +75,7 @@ export class PlanetService {
 
   async remove(id: number) {
     const planet = await dataSource.manager.findOneBy(Planet, { id });
-    if (!planet) throw new BadRequestException('Incorrect id');
+    if (!planet) throw new NotFoundException('Incorrect id');
     const deleteInfo = await dataSource.manager.remove(planet);
     await this.imageService.deleteImages(deleteInfo.images);
     return deleteInfo;
