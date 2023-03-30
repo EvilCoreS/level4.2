@@ -1,7 +1,7 @@
-import dataSource from '../../database/db.config';
 import { NotFoundException } from '@nestjs/common';
 import { plainToClassFromExist } from 'class-transformer';
 import { EntityTarget } from 'typeorm';
+import dataSource from '../../database/db.datasource';
 
 export async function relationsSaver<T extends EntityTarget<{ id: number }>, U>(
   entity: T,

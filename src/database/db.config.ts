@@ -1,7 +1,7 @@
-import { DataSource, DataSourceOptions } from 'typeorm';
+import { DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
 dotenv.config();
-export const typeormConfig: DataSourceOptions = {
+const typeormConfig: DataSourceOptions = {
   type: 'mysql',
   host: process.env['DB_HOST'],
   port: isNaN(+process.env['DB_PORT']) ? 3306 : +process.env['DB_PORT'],
@@ -12,5 +12,4 @@ export const typeormConfig: DataSourceOptions = {
   migrations: ['dist/database/migrations/*.js'],
 };
 
-const dataSource = new DataSource(typeormConfig);
-export default dataSource;
+export default typeormConfig;

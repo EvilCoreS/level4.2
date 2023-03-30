@@ -2,8 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { v4 as uuid } from 'uuid';
 import * as fs from 'fs';
-import dataSource from '../database/db.config';
 import { Image } from './entities/image.entity';
+import dataSource from '../database/db.datasource';
 
 export const PATH_TO_PUBLIC = 'src/database/public';
 @Injectable()
