@@ -24,8 +24,8 @@
     "migration:revert": "npm run typeorm -- migration:revert",
     "migration:generate": "npm run typeorm -- migration:generate src/database/migrations/migration",
     "migration:generate:name": "npm run typeorm -- migration:generate src/database/migrations/$npm_config_name",
-    "seed:config": "ts-node node_modules/typeorm-seeding/dist/cli.js config -n src/database/db.config.ts",
-    "seed:run": "ts-node node_modules/typeorm-seeding/dist/cli.js seed -n src/database/db.config.ts"
+    "seed:config": "ts-node node_modules/typeorm-seeding/dist/cli.js config -n src/database/db.config-seed.ts",
+    "seed:run": "ts-node node_modules/typeorm-seeding/dist/cli.js seed -n src/database/db.config-seed.ts"
   },
   "dependencies": {
     "@automapper/classes": "^8.7.7",

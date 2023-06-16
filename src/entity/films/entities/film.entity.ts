@@ -23,7 +23,7 @@ export class Film {
   @Column()
   episode_id: number;
 
-  @Column()
+  @Column({ type: 'longtext' })
   opening_crawl: string;
 
   @Column()
