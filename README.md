@@ -1,23 +1,41 @@
-## Installation
-```Fill variables in ".env.exapmle" file and rename it into ".env"```
+## First time installation
+```bash
+ # linux-only
+ $ make preinstall-linux
+```
 
 ```bash
-$ npm install
-
-$ npm run migration:generate
-
-$ npm run migration:run
+ # or run this and fill variables in new .env
+ $ make preinstall
+ 
+ # after run migrations
+ $ make migrate
 ```
 
 ## Running the app
 
 ```bash
-# development
-$ npm run start
+# production
+$ make start
 
-# watch mode
-$ npm run start:dev
+# development mode
+$ make start-dev
+```
 
-# production mode
-$ npm run start:prod
+## Database management
+
+```bash
+# start migrations
+$ make migrate
+
+# delete migrations
+$ make rollback
+
+# generate migrations
+$ make generate
+```
+
+## eslint --fix
+```bash
+$ make format
 ```

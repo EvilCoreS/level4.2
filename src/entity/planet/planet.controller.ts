@@ -16,7 +16,7 @@ import {
 import { PlanetService } from './planet.service';
 import { CreatePlanetDto } from './dto/create-planet.dto';
 import { UpdatePlanetDto } from './dto/update-planet.dto';
-import { ApiConsumes, ApiQuery } from '@nestjs/swagger';
+import { ApiConsumes } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { uploadFilesSizeConfig } from '../../common/config/upload-files-size.config';
 import { PlanetRelationsDto } from './dto/planet-relations.dto';

@@ -5,16 +5,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ImagesModule } from './images/images.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { PATH_TO_PUBLIC } from './images/images.service';
-import typeormConfig from './database/db.config';
+import typeormConfig from '../database/db.config';
+import { getEnvData } from './common/config/config';
 
 @Module({
   imports: [
     EntityModule,
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({ isGlobal: true, load: [getEnvData] }),
     TypeOrmModule.forRoot(typeormConfig),
     ImagesModule,
     ServeStaticModule.forRoot({
-      rootPath: __dirname + `/../${PATH_TO_PUBLIC}`,
+      rootPath: PATH_TO_PUBLIC,
     }),
   ],
 })

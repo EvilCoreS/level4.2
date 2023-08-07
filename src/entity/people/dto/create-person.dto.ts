@@ -1,7 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmpty, IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { Planet } from '../../planet/entities/planet.entity';
-import { CreatePlanetDto } from '../../planet/dto/create-planet.dto';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreatePersonDto {
   @ApiProperty({ example: 'test' })

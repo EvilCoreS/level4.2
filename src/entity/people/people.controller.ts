@@ -45,7 +45,7 @@ export class PeopleController {
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
     @Query('count', new DefaultValuePipe(10), ParseIntPipe) count: number,
   ) {
-    return this.peopleService.findAll(offset, count);
+    return this.peopleService.paginate({ page: offset, limit: count });
   }
 
   @Get(':id')

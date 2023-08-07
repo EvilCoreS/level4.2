@@ -36,5 +36,5 @@ lerna-debug.log*
 
 
 .env
-/src/database/migrations/
-/src/database/public/
+/database/migrations/
+/public/

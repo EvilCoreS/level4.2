@@ -20,7 +20,6 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes } from '@nestjs/swagger';
 import { uploadFilesSizeConfig } from '../../common/config/upload-files-size.config';
 import { OptionalQueryDecorator } from '../../common/decorators/optional-query.decorator';
-import { PlanetRelationsDto } from '../planet/dto/planet-relations.dto';
 import { SpeciesRelationsDto } from './dto/species-relations.dto';
 
 @Controller('species')

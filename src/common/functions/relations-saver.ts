@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { plainToClassFromExist } from 'class-transformer';
 import { EntityTarget } from 'typeorm';
-import dataSource from '../../database/db.datasource';
+import dataSource from '../../../database/db.datasource';
 
 export async function relationsSaver<T extends EntityTarget<{ id: number }>, U>(
   entity: T,
@@ -23,5 +23,5 @@ export async function relationsSaver<T extends EntityTarget<{ id: number }>, U>(
       toAddObj[key] = newArr;
     }
   });
-  return await dataSource.manager.save(toAddObj);
+  return dataSource.manager.save(toAddObj);
 }

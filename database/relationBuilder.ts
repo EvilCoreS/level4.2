@@ -1,16 +1,16 @@
-import { SeedDataInterface } from '../common/interfaces/seed-data.interface';
-import { PersonRepository } from '../entity/people/person.repository';
-import { PlanetRepository } from '../entity/planet/planet.repository';
-import { FilmRepository } from '../entity/films/film.repository';
-import { VehiclesRepository } from '../entity/vehicles/vehicles.repository';
-import { StarshipRepository } from '../entity/starships/starships.repository';
-import { SpeciesRepository } from '../entity/species/species.repository';
-import { Person } from '../entity/people/entities/person.entity';
-import { Planet } from '../entity/planet/entities/planet.entity';
-import { Film } from '../entity/films/entities/film.entity';
-import { Vehicle } from '../entity/vehicles/entities/vehicle.entity';
-import { Starship } from '../entity/starships/entities/starship.entity';
-import { Species } from '../entity/species/entities/species.entity';
+import { SeedDataInterface } from '../src/common/interfaces/seed-data.interface';
+import { PersonRepository } from '../src/entity/people/person.repository';
+import { PlanetRepository } from '../src/entity/planet/planet.repository';
+import { FilmRepository } from '../src/entity/films/film.repository';
+import { VehiclesRepository } from '../src/entity/vehicles/vehicles.repository';
+import { StarshipRepository } from '../src/entity/starships/starships.repository';
+import { SpeciesRepository } from '../src/entity/species/species.repository';
+import { Person } from '../src/entity/people/entities/person.entity';
+import { Planet } from '../src/entity/planet/entities/planet.entity';
+import { Film } from '../src/entity/films/entities/film.entity';
+import { Vehicle } from '../src/entity/vehicles/entities/vehicle.entity';
+import { Starship } from '../src/entity/starships/entities/starship.entity';
+import { Species } from '../src/entity/species/entities/species.entity';
 import { plainToInstance } from 'class-transformer';
 
 export class RelationBuilder {

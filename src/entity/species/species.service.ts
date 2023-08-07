@@ -1,16 +1,12 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateSpeciesDto } from './dto/create-species.dto';
 import { UpdateSpeciesDto } from './dto/update-species.dto';
 import { plainToClassFromExist, plainToInstance } from 'class-transformer';
-import { Image } from '../../images/entities/image.entity';
-import dataSource from '../../database/db.config';
-import { ImagesService, PATH_TO_PUBLIC } from '../../images/images.service';
+import { ImagesService } from '../../images/images.service';
 import { Species } from './entities/species.entity';
-import fs from 'fs';
 import { relationsSaver } from '../../common/functions/relations-saver';
 import { SpeciesRelationsDto } from './dto/species-relations.dto';
 import { SpeciesRepository } from './species.repository';
-import { of } from 'rxjs';
 
 @Injectable()
 export class SpeciesService {
@@ -23,17 +19,14 @@ export class SpeciesService {
     createSpeciesDto: CreateSpeciesDto,
     files: Express.Multer.File[],
   ) {
-    const filesInfo = plainToInstance(
-      Image,
-      this.imageService.uploadFile(files),
-    );
+    const filesInfo = await this.imageService.uploadFile(files);
     const objToSave = plainToInstance(Species, createSpeciesDto);
     objToSave.images = filesInfo;
-    return await this.speciesRepository.save(objToSave);
+    return this.speciesRepository.save(objToSave);
   }
 
   async findAll(offset = 0, count = 10) {
-    return await this.speciesRepository.findAll(offset, count, [
+    return this.speciesRepository.findAll(offset, count, [
       'people',
       'images',
       'films',
@@ -42,7 +35,7 @@ export class SpeciesService {
   }
 
   async findOne(id: number) {
-    return await this.speciesRepository.findOneById(id, [
+    return this.speciesRepository.findOneById(id, [
       'people',
       'images',
       'films',
@@ -55,27 +48,18 @@ export class SpeciesService {
     updateSpeciesDto: UpdateSpeciesDto,
     files: Express.Multer.File[],
   ) {
-    const species = await this.speciesRepository.findOneById(id);
-    const newImages = plainToInstance(
-      Image,
-      this.imageService.uploadFile(files),
-    );
+    const species = await this.speciesRepository.findOneById(id, ['images']);
+    const newImages = await this.imageService.uploadFile(files);
     newImages.map((newImage) => {
       const findIndex = species.images.findIndex(
         (image) => image.original_name === newImage.original_name,
       );
       if (findIndex >= 0) {
-        try {
-          fs.unlinkSync(
-            `./${PATH_TO_PUBLIC}/${species.images[findIndex].file_name}`,
-          );
-        } catch (e) {
-          console.log(e);
-        }
+        this.imageService.deleteImages([species.images[findIndex]]);
         plainToClassFromExist(species.images[findIndex], newImage);
       } else species.images.push(newImage);
     });
-    return await this.speciesRepository.save(
+    return this.speciesRepository.save(
       plainToClassFromExist(species, updateSpeciesDto),
     );
   }
@@ -87,6 +71,6 @@ export class SpeciesService {
   }
 
   async addRelations(dto: SpeciesRelationsDto, id: number) {
-    return await relationsSaver(Species, dto, id);
+    return relationsSaver(Species, dto, id);
   }
 }

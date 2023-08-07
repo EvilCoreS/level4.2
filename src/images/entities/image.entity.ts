@@ -13,4 +13,7 @@ export class Image {
 
   @Column({ type: 'date', name: 'upload_date' })
   date: string;
+
+  @Column({ type: 'longtext', name: 'aws_link' })
+  aws_link: string;
 }

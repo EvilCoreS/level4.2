@@ -1,16 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import dataSource from './database/db.datasource';
+import dataSource from '../database/db.datasource';
+import { ConfigService } from '@nestjs/config';
+import { TransformResponseData } from './common/interceptors/global-data.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix('api');
+  const config = app.get(ConfigService);
+  const port = config.get('port');
+  const env = config.get('env');
+  if (!port) throw new Error('Missing PORT');
 
-  const config = new DocumentBuilder().build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('swagger', app, document);
+  app.setGlobalPrefix('api');
+  app.useGlobalInterceptors(new TransformResponseData());
+
+  if (env === 'dev' || env === 'development') {
+    const swaggerConfig = new DocumentBuilder().build();
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('swagger', app, document);
+  }
 
   dataSource
     .initialize()
@@ -21,7 +31,8 @@ async function bootstrap() {
       console.error('Error during Data Source initialization', err);
     });
 
-  await app.listen(3000);
-  console.log('http://localhost:3000/swagger');
+  app.listen(port, () => {
+    console.log(`http://localhost:${port}/swagger`);
+  });
 }
 bootstrap();

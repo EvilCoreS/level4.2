@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseInterceptors,
@@ -19,11 +18,8 @@ import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { ApiConsumes } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { CreateStarshipDto } from '../starships/dto/create-starship.dto';
 import { uploadFilesSizeConfig } from '../../common/config/upload-files-size.config';
 import { OptionalQueryDecorator } from '../../common/decorators/optional-query.decorator';
-import { UpdateStarshipDto } from '../starships/dto/update-starship.dto';
-import { StarshipsRelationsDto } from '../starships/dto/starships-relations.dto';
 import { VehiclesRelationsDto } from './dto/vehicles-relations.dto';
 
 @Controller('vehicles')

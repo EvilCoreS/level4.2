@@ -1,53 +1,67 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { v4 as uuid } from 'uuid';
-import * as fs from 'fs';
 import { Image } from './entities/image.entity';
-import dataSource from '../database/db.datasource';
+import dataSource from '../../database/db.datasource';
 
-export const PATH_TO_PUBLIC = 'src/database/public';
+import { plainToClassFromExist } from 'class-transformer';
+import { FileService } from '../file-services/file/file.service';
+import { BucketService } from '../file-services/bucket/bucket.service';
+import * as path from 'path';
+
+export const PATH_TO_PUBLIC = path.resolve(
+  __dirname,
+  '../',
+  '../',
+  '../',
+  './public',
+);
 @Injectable()
 export class ImagesService {
-  uploadFile(files: Express.Multer.File[]) {
+  constructor(
+    private fileService: FileService,
+    private bucketService: BucketService,
+  ) {}
+  async uploadFile(files: Express.Multer.File[]) {
     const fileTypeRegExp = /(\.png)|(\.jpeg)|(\.jpg)$/;
-    const filesInfo = [];
-    files.map((file) => {
-      const fileInfo = {
-        file_name: uuid() + file.originalname.match(fileTypeRegExp)[0],
-        original_name: file.originalname,
-        date: new Date(),
-      };
-      filesInfo.push(fileInfo);
-      fs.mkdir(`./${PATH_TO_PUBLIC}`, () => {
-        fs.writeFileSync(
-          `./${PATH_TO_PUBLIC}/${fileInfo.file_name}`,
+    const filesInfo: Image[] = [];
+    await Promise.all(
+      files.map(async (file) => {
+        const fileName = uuid() + file.originalname.match(fileTypeRegExp)[0];
+        const link = await this.bucketService.addFile(
+          fileName,
           file.buffer,
+          file.mimetype,
         );
-      });
-    });
+
+        const fileInfo = {
+          file_name: fileName,
+          original_name: file.originalname,
+          date: new Date(),
+          aws_link: link,
+        };
+
+        filesInfo.push(plainToClassFromExist(new Image(), fileInfo));
+        this.fileService.addFile(fileName, file.buffer);
+      }),
+    );
     return filesInfo;
   }
 
   async deleteImageById(id: number) {
     const image = await dataSource.manager.findOneBy(Image, { id: id });
     if (!image) throw new NotFoundException('Incorrect id');
-    try {
-      fs.unlinkSync(`./${PATH_TO_PUBLIC}/${image.file_name}`);
-    } catch (e) {
-      console.log(e);
-    }
-    return await dataSource.manager.remove(image);
+
+    this.fileService.deleteFile(image.file_name);
+    return dataSource.manager.remove(image);
   }
 
   async deleteImages(images: Image[]) {
     images.map((image) => {
-      try {
-        fs.unlinkSync(`./${PATH_TO_PUBLIC}/${image.file_name}`);
-      } catch (e) {
-        console.log(e);
-      }
+      this.fileService.deleteFile(image.file_name);
+      this.bucketService.deleteFile(image.file_name);
     });
-    return await dataSource.manager.remove(images);
+    return dataSource.manager.remove(images);
   }
 
   async findAll() {

@@ -1,12 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
-import { ImagesService, PATH_TO_PUBLIC } from '../../images/images.service';
+import { ImagesService } from '../../images/images.service';
 import { plainToClassFromExist, plainToInstance } from 'class-transformer';
-import { Image } from '../../images/entities/image.entity';
-import dataSource from '../../database/db.config';
 import { Vehicle } from './entities/vehicle.entity';
-import fs from 'fs';
 import { relationsSaver } from '../../common/functions/relations-saver';
 import { VehiclesRelationsDto } from './dto/vehicles-relations.dto';
 import { VehiclesRepository } from './vehicles.repository';
@@ -19,17 +16,14 @@ export class VehiclesService {
   ) {}
 
   async create(dto: CreateVehicleDto, files: Express.Multer.File[]) {
-    const filesInfo = plainToInstance(
-      Image,
-      this.imageService.uploadFile(files),
-    );
+    const filesInfo = await this.imageService.uploadFile(files);
     const objToSave = plainToInstance(Vehicle, dto);
     objToSave.images = filesInfo;
-    return await this.vehicleRepository.save(objToSave);
+    return this.vehicleRepository.save(objToSave);
   }
 
   async findAll(offset = 0, count = 10) {
-    return await this.vehicleRepository.findAll(offset, count, [
+    return this.vehicleRepository.findAll(offset, count, [
       'pilots',
       'images',
       'films',
@@ -37,7 +31,7 @@ export class VehiclesService {
   }
 
   async findOne(id: number) {
-    return await this.vehicleRepository.findOneById(id, [
+    return this.vehicleRepository.findOneById(id, [
       'pilots',
       'images',
       'films',
@@ -49,29 +43,18 @@ export class VehiclesService {
     dto: UpdateVehicleDto,
     files: Express.Multer.File[],
   ) {
-    const vehicle = await this.vehicleRepository.findOneById(id);
-    const newImages = plainToInstance(
-      Image,
-      this.imageService.uploadFile(files),
-    );
+    const vehicle = await this.vehicleRepository.findOneById(id, ['images']);
+    const newImages = await this.imageService.uploadFile(files);
     newImages.map((newImage) => {
       const findIndex = vehicle.images.findIndex(
         (image) => image.original_name === newImage.original_name,
       );
       if (findIndex >= 0) {
-        try {
-          fs.unlinkSync(
-            `./${PATH_TO_PUBLIC}/${vehicle.images[findIndex].file_name}`,
-          );
-        } catch (e) {
-          console.log(e);
-        }
+        this.imageService.deleteImages([vehicle.images[findIndex]]);
         plainToClassFromExist(vehicle.images[findIndex], newImage);
       } else vehicle.images.push(newImage);
     });
-    return await this.vehicleRepository.save(
-      plainToClassFromExist(vehicle, dto),
-    );
+    return this.vehicleRepository.save(plainToClassFromExist(vehicle, dto));
   }
 
   async remove(id: number) {
@@ -81,6 +64,6 @@ export class VehiclesService {
   }
 
   async addRelations(dto: VehiclesRelationsDto, id: number) {
-    return await relationsSaver(Vehicle, dto, id);
+    return relationsSaver(Vehicle, dto, id);
   }
 }

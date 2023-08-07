@@ -5,7 +5,6 @@ import { Planet } from '../../entity/planet/entities/planet.entity';
 import { Species } from '../../entity/species/entities/species.entity';
 import { Starship } from '../../entity/starships/entities/starship.entity';
 import { Vehicle } from '../../entity/vehicles/entities/vehicle.entity';
-import { FilmRelationsDto } from '../../entity/films/dto/film-relations.dto';
 
 export interface SeedDataInterface {
   films: Array<

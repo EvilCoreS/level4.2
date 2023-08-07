@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseInterceptors,
@@ -58,7 +57,8 @@ export class FilmsController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body(ValidationPipe) updateFilmDto: UpdateFilmDto,
-    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE'])) files: Express.Multer.File[],
+    @UploadedFiles(uploadFilesSizeConfig(process.env['MAX_FILE_SIZE']))
+    files: Express.Multer.File[],
   ) {
     return this.filmsService.update(id, updateFilmDto, files);
   }

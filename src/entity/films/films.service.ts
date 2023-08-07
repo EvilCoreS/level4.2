@@ -1,12 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateFilmDto } from './dto/create-film.dto';
 import { UpdateFilmDto } from './dto/update-film.dto';
 import { plainToClassFromExist, plainToInstance } from 'class-transformer';
-import { Image } from '../../images/entities/image.entity';
-import dataSource from '../../database/db.config';
-import { ImagesService, PATH_TO_PUBLIC } from '../../images/images.service';
+import { ImagesService } from '../../images/images.service';
 import { Film } from './entities/film.entity';
-import fs from 'fs';
 import { FilmRelationsDto } from './dto/film-relations.dto';
 import { relationsSaver } from '../../common/functions/relations-saver';
 import { FilmRepository } from './film.repository';
@@ -19,17 +16,14 @@ export class FilmsService {
   ) {}
 
   async create(createFilmDto: CreateFilmDto, files: Express.Multer.File[]) {
-    const filesInfo = plainToInstance(
-      Image,
-      this.imageService.uploadFile(files),
-    );
+    const filesInfo = await this.imageService.uploadFile(files);
     const objToSave = plainToInstance(Film, createFilmDto);
     objToSave.images = filesInfo;
-    return await this.filmRepository.save(objToSave);
+    return this.filmRepository.save(objToSave);
   }
 
   async findAll(offset = 0, count = 10) {
-    return await this.filmRepository.findAll(offset, count, [
+    return this.filmRepository.findAll(offset, count, [
       'images',
       'characters',
       'planets',
@@ -40,7 +34,7 @@ export class FilmsService {
   }
 
   async findOne(id: number) {
-    return await this.filmRepository.findOneById(id, [
+    return this.filmRepository.findOneById(id, [
       'images',
       'characters',
       'planets',
@@ -56,28 +50,17 @@ export class FilmsService {
     files: Express.Multer.File[],
   ) {
     const film = await this.filmRepository.findOneById(id, ['images']);
-    const newImages = plainToInstance(
-      Image,
-      this.imageService.uploadFile(files),
-    );
+    const newImages = await this.imageService.uploadFile(files);
     newImages.map((newImage) => {
       const findIndex = film.images.findIndex(
         (image) => image.original_name === newImage.original_name,
       );
       if (findIndex >= 0) {
-        try {
-          fs.unlinkSync(
-            `./${PATH_TO_PUBLIC}/${film.images[findIndex].file_name}`,
-          );
-        } catch (e) {
-          console.log(e);
-        }
+        this.imageService.deleteImages([film.images[findIndex]]);
         plainToClassFromExist(film.images[findIndex], newImage);
       } else film.images.push(newImage);
     });
-    return await this.filmRepository.save(
-      plainToClassFromExist(film, updateFilmDto),
-    );
+    return this.filmRepository.save(plainToClassFromExist(film, updateFilmDto));
   }
 
   async remove(id: number) {
@@ -87,6 +70,6 @@ export class FilmsService {
   }
 
   async addRelations(dto: FilmRelationsDto, id: number) {
-    return await relationsSaver(Film, dto, id);
+    return relationsSaver(Film, dto, id);
   }
 }

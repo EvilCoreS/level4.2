@@ -2,13 +2,13 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
 import { plainToClassFromExist, plainToInstance } from 'class-transformer';
-import { ImagesService, PATH_TO_PUBLIC } from '../../images/images.service';
-import { Image } from '../../images/entities/image.entity';
-import * as fs from 'fs';
+import { ImagesService } from '../../images/images.service';
 import { PeopleRelationsDto } from './dto/people-relations.dto';
 import { relationsSaver } from '../../common/functions/relations-saver';
 import { PersonRepository } from './person.repository';
 import { Person } from './entities/person.entity';
+import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
+import dataSource from '../../../database/db.datasource';
 
 @Injectable()
 export class PeopleService {
@@ -18,17 +18,18 @@ export class PeopleService {
     private personRepository: PersonRepository,
   ) {}
   async create(createPersonDto: CreatePersonDto, files: Express.Multer.File[]) {
-    const filesInfo = plainToInstance(
-      Image,
-      this.imageService.uploadFile(files),
-    );
+    const filesInfo = await this.imageService.uploadFile(files);
     const objToSave = plainToInstance(Person, createPersonDto);
     objToSave.images = filesInfo;
-    return await this.personRepository.save(objToSave);
+    return this.personRepository.save(objToSave);
+  }
+
+  async paginate(options: IPaginationOptions) {
+    return paginate(dataSource.getRepository(Person), options);
   }
 
   async findAll(offset = 0, count = 10) {
-    return await this.personRepository.findAll(offset, count, [
+    return this.personRepository.findAll(offset, count, [
       'images',
       'homeworld',
       'films',
@@ -39,7 +40,7 @@ export class PeopleService {
   }
 
   async findOne(id: number) {
-    return await this.personRepository.findOneById(id, [
+    return this.personRepository.findOneById(id, [
       'images',
       'homeworld',
       'films',
@@ -55,26 +56,17 @@ export class PeopleService {
     files: Express.Multer.File[],
   ) {
     const person = await this.personRepository.findOneById(id, ['images']);
-    const newImages = plainToInstance(
-      Image,
-      this.imageService.uploadFile(files),
-    );
+    const newImages = await this.imageService.uploadFile(files);
     newImages.map((newImage) => {
       const findIndex = person.images.findIndex(
         (image) => image.original_name === newImage.original_name,
       );
       if (findIndex >= 0) {
-        try {
-          fs.unlinkSync(
-            `./${PATH_TO_PUBLIC}/${person.images[findIndex].file_name}`,
-          );
-        } catch (e) {
-          console.log(e);
-        }
+        this.imageService.deleteImages([person.images[findIndex]]);
         plainToClassFromExist(person.images[findIndex], newImage);
       } else person.images.push(newImage);
     });
-    return await this.personRepository.save(
+    return this.personRepository.save(
       plainToClassFromExist(person, updatePersonDto),
     );
   }
@@ -86,6 +78,6 @@ export class PeopleService {
   }
 
   async addRelations(dto: PeopleRelationsDto, id: number) {
-    return await relationsSaver(Person, dto, id);
+    return relationsSaver(Person, dto, id);
   }
 }

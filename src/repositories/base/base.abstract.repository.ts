@@ -15,7 +15,7 @@ export abstract class BaseAbstractRepository<T extends EntityInterface>
     this.entity = entity;
   }
   public async save(data: DeepPartial<T>): Promise<T> {
-    return await this.entity.save(data);
+    return this.entity.save(data);
   }
 
   public async findOneById(id: any, relations?: string[]): Promise<T> {
@@ -32,9 +32,10 @@ export abstract class BaseAbstractRepository<T extends EntityInterface>
     count: number,
     relations?: string[],
   ): Promise<T[]> {
-    return await this.entity.find({
+    return this.entity.find({
       skip: offset,
       take: count,
+      loadEagerRelations: false,
       relations,
     });
   }
@@ -42,6 +43,6 @@ export abstract class BaseAbstractRepository<T extends EntityInterface>
   public async remove(id: any): Promise<T> {
     const findResult = await this.entity.findOneBy({ id });
     if (!findResult) throw new NotFoundException('Incorrect id');
-    return await this.entity.remove(findResult);
+    return this.entity.remove(findResult);
   }
 }
