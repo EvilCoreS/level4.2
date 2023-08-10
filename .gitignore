@@ -37,4 +37,7 @@ lerna-debug.log*
 
 .env
 /database/migrations/
-/public/
+/public/*.jpg
+/public/*.jpeg
+/public/*.png
+

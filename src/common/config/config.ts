@@ -21,5 +21,11 @@ export function getEnvData() {
       secret_key: env['AWS_SECRET_KEY'],
     },
     fileSizeMax: env['MAX_FILE_SIZE'],
+    jwt: {
+      access_key: env['JWT_ACCESS_KEY'],
+      access_exp: env['JWT_ACCESS_EXP'],
+      refresh_key: env['JWT_REFRESH_KEY'],
+      refresh_exp: env['JWT_REFRESH_EXP'],
+    },
   };
 }

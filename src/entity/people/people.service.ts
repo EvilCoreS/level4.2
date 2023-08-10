@@ -25,19 +25,29 @@ export class PeopleService {
   }
 
   async paginate(options: IPaginationOptions) {
-    return paginate(dataSource.getRepository(Person), options);
+    return paginate(dataSource.getRepository(Person), options, {
+      relations: [
+        'images',
+        'homeworld',
+        'films',
+        'species',
+        'starships',
+        'vehicles',
+      ],
+      loadEagerRelations: false,
+    });
   }
 
-  async findAll(offset = 0, count = 10) {
-    return this.personRepository.findAll(offset, count, [
-      'images',
-      'homeworld',
-      'films',
-      'species',
-      'starships',
-      'vehicles',
-    ]);
-  }
+  // async findAll(offset = 0, count = 10) {
+  //   return this.personRepository.findAll(offset, count, [
+  //     'images',
+  //     'homeworld',
+  //     'films',
+  //     'species',
+  //     'starships',
+  //     'vehicles',
+  //   ]);
+  // }
 
   async findOne(id: number) {
     return this.personRepository.findOneById(id, [

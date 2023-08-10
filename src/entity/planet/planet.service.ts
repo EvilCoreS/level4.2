@@ -7,6 +7,8 @@ import { Planet } from './entities/planet.entity';
 import { PlanetRelationsDto } from './dto/planet-relations.dto';
 import { relationsSaver } from '../../common/functions/relations-saver';
 import { PlanetRepository } from './planet.repository';
+import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
+import dataSource from '../../../database/db.datasource';
 @Injectable()
 export class PlanetService {
   constructor(
@@ -19,6 +21,13 @@ export class PlanetService {
     const objToSave = plainToInstance(Planet, createPlanetDto);
     objToSave.images = filesInfo;
     return this.planetRepository.save(objToSave);
+  }
+
+  async paginate(options: IPaginationOptions) {
+    return paginate(dataSource.getRepository(Planet), options, {
+      relations: ['residents', 'images', 'films'],
+      loadEagerRelations: false,
+    });
   }
 
   async findAll(offset = 0, count = 10) {
@@ -45,7 +54,6 @@ export class PlanetService {
     const planet = await this.planetRepository.findOneById(id, ['images']);
     const newImages = await this.imageService.uploadFile(files);
     newImages.map((newImage) => {
-      console.log(planet.images);
       const findIndex = planet.images.findIndex(
         (image) => image.original_name === newImage.original_name,
       );

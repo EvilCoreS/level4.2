@@ -10,6 +10,8 @@ rollback:
 	npm run migration:revert
 generate:
 	npm run migration:generate
+delete-migrations:
+	rm database/migrations/*
 start:
 	npm run start
 start-dev:
@@ -20,3 +22,4 @@ format:
 	npm run lint
 preinstall-linux: copy-env edit-env install migrate
 preinstall: copy-env install
+re-migrate: rollback delete-migrations generate migrate

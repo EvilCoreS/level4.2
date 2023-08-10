@@ -4,6 +4,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import dataSource from '../database/db.datasource';
 import { ConfigService } from '@nestjs/config';
 import { TransformResponseData } from './common/interceptors/global-data.interceptor';
+import { GlobalFilterException } from './common/exceptions/global-filter.exception';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,10 +16,16 @@ async function bootstrap() {
   if (!port) throw new Error('Missing PORT');
 
   app.setGlobalPrefix('api');
+  // app.useGlobalFilters(new GlobalFilterException());
   app.useGlobalInterceptors(new TransformResponseData());
+  app.use(cookieParser());
 
   if (env === 'dev' || env === 'development') {
-    const swaggerConfig = new DocumentBuilder().build();
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Level 4.2')
+      .setDescription('My level 4.2 nestjs app')
+      .addBearerAuth()
+      .build();
     const document = SwaggerModule.createDocument(app, swaggerConfig);
     SwaggerModule.setup('swagger', app, document);
   }

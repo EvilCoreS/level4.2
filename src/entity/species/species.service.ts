@@ -7,7 +7,8 @@ import { Species } from './entities/species.entity';
 import { relationsSaver } from '../../common/functions/relations-saver';
 import { SpeciesRelationsDto } from './dto/species-relations.dto';
 import { SpeciesRepository } from './species.repository';
-
+import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
+import dataSource from '../../../database/db.datasource';
 @Injectable()
 export class SpeciesService {
   constructor(
@@ -23,6 +24,13 @@ export class SpeciesService {
     const objToSave = plainToInstance(Species, createSpeciesDto);
     objToSave.images = filesInfo;
     return this.speciesRepository.save(objToSave);
+  }
+
+  async paginate(options: IPaginationOptions) {
+    return paginate(dataSource.getRepository(Species), options, {
+      relations: ['people', 'images', 'films', 'homeworld'],
+      loadEagerRelations: false,
+    });
   }
 
   async findAll(offset = 0, count = 10) {

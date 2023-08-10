@@ -7,7 +7,8 @@ import { Starship } from './entities/starship.entity';
 import { relationsSaver } from '../../common/functions/relations-saver';
 import { StarshipsRelationsDto } from './dto/starships-relations.dto';
 import { StarshipRepository } from './starships.repository';
-
+import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
+import dataSource from '../../../database/db.datasource';
 @Injectable()
 export class StarshipsService {
   constructor(
@@ -19,6 +20,13 @@ export class StarshipsService {
     const objToSave = plainToInstance(Starship, dto);
     objToSave.images = filesInfo;
     return this.starshipRepository.save(objToSave);
+  }
+
+  async paginate(options: IPaginationOptions) {
+    return paginate(dataSource.getRepository(Starship), options, {
+      relations: ['pilots', 'images', 'films'],
+      loadEagerRelations: false,
+    });
   }
 
   async findAll(offset = 0, count = 10) {

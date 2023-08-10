@@ -7,6 +7,8 @@ import { Film } from './entities/film.entity';
 import { FilmRelationsDto } from './dto/film-relations.dto';
 import { relationsSaver } from '../../common/functions/relations-saver';
 import { FilmRepository } from './film.repository';
+import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
+import dataSource from '../../../database/db.datasource';
 
 @Injectable()
 export class FilmsService {
@@ -20,6 +22,20 @@ export class FilmsService {
     const objToSave = plainToInstance(Film, createFilmDto);
     objToSave.images = filesInfo;
     return this.filmRepository.save(objToSave);
+  }
+
+  async paginate(options: IPaginationOptions) {
+    return paginate(dataSource.getRepository(Film), options, {
+      relations: [
+        'images',
+        'characters',
+        'planets',
+        'species',
+        'starships',
+        'vehicles',
+      ],
+      loadEagerRelations: false,
+    });
   }
 
   async findAll(offset = 0, count = 10) {

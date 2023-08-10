@@ -7,7 +7,8 @@ import { Vehicle } from './entities/vehicle.entity';
 import { relationsSaver } from '../../common/functions/relations-saver';
 import { VehiclesRelationsDto } from './dto/vehicles-relations.dto';
 import { VehiclesRepository } from './vehicles.repository';
-
+import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
+import dataSource from '../../../database/db.datasource';
 @Injectable()
 export class VehiclesService {
   constructor(
@@ -20,6 +21,13 @@ export class VehiclesService {
     const objToSave = plainToInstance(Vehicle, dto);
     objToSave.images = filesInfo;
     return this.vehicleRepository.save(objToSave);
+  }
+
+  async paginate(options: IPaginationOptions) {
+    return paginate(dataSource.getRepository(Vehicle), options, {
+      relations: ['pilots', 'images', 'films'],
+      loadEagerRelations: false,
+    });
   }
 
   async findAll(offset = 0, count = 10) {

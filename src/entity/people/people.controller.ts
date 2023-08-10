@@ -1,34 +1,43 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Param,
+  Controller,
+  DefaultValuePipe,
   Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
   Put,
   Query,
-  ParseIntPipe,
-  ValidationPipe,
-  UseInterceptors,
   UploadedFiles,
-  DefaultValuePipe,
   UseFilters,
+  UseGuards,
+  UseInterceptors,
+  ValidationPipe,
 } from '@nestjs/common';
 import { PeopleService } from './people.service';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
-import { ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { uploadFilesSizeConfig } from '../../common/config/upload-files-size.config';
 import { PeopleRelationsDto } from './dto/people-relations.dto';
 import { OptionalQueryDecorator } from '../../common/decorators/optional-query.decorator';
 import { EntityNotFoundExceptionFilter } from '../../common/exceptions/entity-not-found.exception';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { Role } from '../../common/enums/role.enum';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
+@ApiTags('People')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('people')
 export class PeopleController {
   constructor(private readonly peopleService: PeopleService) {}
 
   @Post()
+  @Roles(Role.Admin)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FilesInterceptor('files'))
   async create(
@@ -40,22 +49,25 @@ export class PeopleController {
   }
 
   @Get()
+  @Roles(Role.Admin, Role.User)
   @OptionalQueryDecorator()
   findAll(
-    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
+    @Query('offset', new DefaultValuePipe(1), ParseIntPipe) offset: number,
     @Query('count', new DefaultValuePipe(10), ParseIntPipe) count: number,
   ) {
     return this.peopleService.paginate({ page: offset, limit: count });
   }
 
   @Get(':id')
+  @Roles(Role.Admin, Role.User)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.peopleService.findOne(id);
   }
 
-  @UseInterceptors(FilesInterceptor('files'))
-  @ApiConsumes('multipart/form-data')
   @Put(':id')
+  @Roles(Role.Admin)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('files'))
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePersonDto: UpdatePersonDto,
@@ -66,12 +78,14 @@ export class PeopleController {
   }
 
   @Delete(':id')
+  @Roles(Role.Admin)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.peopleService.remove(id);
   }
 
-  @UseFilters(EntityNotFoundExceptionFilter)
   @Put('/relation/:id')
+  @Roles(Role.Admin)
+  @UseFilters(EntityNotFoundExceptionFilter)
   async addRelations(
     @Body(ValidationPipe) dto: PeopleRelationsDto,
     @Param('id', ParseIntPipe) id: number,
