@@ -1,9 +1,9 @@
-import { DataSourceOptions } from 'typeorm';
 import { getEnvData } from '../src/common/config/config';
+import * as path from 'path';
 
 const { database } = getEnvData();
 
-const typeormConfig: DataSourceOptions = {
+const seedConfig = {
   type: 'mysql',
   host: database.host,
   port: +database.port,
@@ -12,6 +12,10 @@ const typeormConfig: DataSourceOptions = {
   database: database.name,
   entities: ['src/**/*.entity.ts'],
   migrations: ['dist/database/migrations/*.js'],
+  seeds: [path.relative(process.cwd(), `${__dirname}/seeds/*.seed.ts`)],
+  factories: [
+    path.relative(process.cwd(), `${__dirname}/factories/*.factory.ts`),
+  ],
 };
 
-export default typeormConfig;
+export default seedConfig;

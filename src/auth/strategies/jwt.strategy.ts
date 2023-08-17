@@ -1,19 +1,15 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
-import {
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { UserService } from '../../user/user.service';
+
 import { PayloadDto } from '../dto/payload.dto';
-import { JwtService } from '@nestjs/jwt';
 import dataSource from '../../../database/db.datasource';
 import { User } from '../../user/entity/user.entity';
+import { Inject } from '@nestjs/common';
+import { CACHE_MANAGER, CacheStore } from '@nestjs/cache-manager';
 
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(@Inject(CACHE_MANAGER) private cacheManager: CacheStore) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -26,12 +22,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(req: Request, payload: PayloadDto) {
-    const user = await dataSource.manager.findOne(User, {
-      where: { id: payload.sub },
-    });
     const token = JwtStrategy.extractTokenFromHeader(req);
-    if (!token) return false;
-    if (user.access_key !== token) return false;
+    const access_key = await this.cacheManager.get<string>(
+      payload.name + '_access',
+    );
+    if (!token || !access_key || access_key !== token) return false;
 
     req['user'] = payload;
     return payload;

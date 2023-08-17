@@ -4,7 +4,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import dataSource from '../database/db.datasource';
 import { ConfigService } from '@nestjs/config';
 import { TransformResponseData } from './common/interceptors/global-data.interceptor';
-import { GlobalFilterException } from './common/exceptions/global-filter.exception';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap() {

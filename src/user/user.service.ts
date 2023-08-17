@@ -53,19 +53,19 @@ export class UserService {
     });
   }
 
-  async updateToken(user: User, [access_key, refresh_key]: string[]) {
-    user.access_key = access_key;
-    user.refresh_key = refresh_key;
-    return dataSource.manager.save(user);
-  }
-
-  async clearToken(token: string) {
-    const user = await dataSource.manager.findOne(User, {
-      where: { access_key: token },
-    });
-    if (!user) throw new InternalServerErrorException();
-    user.access_key = null;
-    user.refresh_key = null;
-    return dataSource.manager.save(user);
-  }
+  // async updateToken(user: User, [access_key, refresh_key]: string[]) {
+  //   user.access_key = access_key;
+  //   user.refresh_key = refresh_key;
+  //   return dataSource.manager.save(user);
+  // }
+  //
+  // async clearToken(token: string) {
+  //   const user = await dataSource.manager.findOne(User, {
+  //     where: { access_key: token },
+  //   });
+  //   if (!user) throw new InternalServerErrorException();
+  //   user.access_key = null;
+  //   user.refresh_key = null;
+  //   return dataSource.manager.save(user);
+  // }
 }

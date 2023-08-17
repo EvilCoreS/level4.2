@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -12,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import ms from 'ms';
 import { PayloadDto } from './dto/payload.dto';
+import { CACHE_MANAGER, CacheStore } from '@nestjs/cache-manager';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +26,7 @@ export class AuthService {
     private userService: UserService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    @Inject(CACHE_MANAGER) private cacheManager: CacheStore,
   ) {
     this.access_key = this.configService.get('jwt.access_key');
     this.access_exp = this.configService.get('jwt.access_exp');
@@ -55,29 +58,48 @@ export class AuthService {
 
     const payload = { name: user.username, sub: user.id, role: user.role };
     const tokens = await this.getToken(payload);
-    this.userService.updateToken(user, tokens);
+
+    this.updateToken(username, tokens);
 
     return this.splitTokensToObj(tokens);
   }
 
   async logout(request: Request) {
     const token = this.extractTokenFromHeader(request);
-    return this.userService.clearToken(token);
+    return this.cacheManager.del(token);
   }
 
   async refresh(token: string) {
-    const user = await dataSource.manager.findOne(User, {
-      where: { refresh_key: token },
-    });
-    if (!user) throw new UnauthorizedException();
-
     const { name, sub, role } = await this.decodeToken(token);
+    const refresh_key = await this.cacheManager.get<string>(name + '_refresh');
+    if (!refresh_key || token !== refresh_key)
+      throw new UnauthorizedException();
 
     const tokens = await this.getToken({ name, sub, role });
-    this.userService.updateToken(user, tokens);
+    // this.userService.updateToken(user, tokens);
+    this.updateToken(name, tokens);
 
     return this.splitTokensToObj(tokens);
   }
+
+  async updateToken(name: string, [access_key, refresh_key]: string[]) {
+    return Promise.all([
+      this.cacheManager.set(name + '_access', access_key, {
+        ttl: ms(this.access_exp),
+      }),
+      this.cacheManager.set(name + '_refresh', refresh_key, {
+        ttl: ms(this.refresh_exp),
+      }),
+    ]);
+  }
+
+  // async deleteToken(access_key: string) {
+  //   const refresh_key = await this.cacheManager.get<string>(access_key);
+  //   return Promise.all([
+  //     this.cacheManager.del(access_key),
+  //     this.cacheManager.del(refresh_key),
+  //   ]);
+  // }
 
   splitTokensToObj(tokens: string[]) {
     return { access_key: tokens[0], refresh_key: tokens[1] };

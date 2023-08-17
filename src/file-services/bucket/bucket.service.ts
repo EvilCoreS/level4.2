@@ -32,9 +32,7 @@ export class BucketService {
     };
 
     const putObjectCommand = new PutObjectCommand(params);
-    this.client.send(putObjectCommand).then((data) => {
-      console.log('Uploaded to Bucket');
-    });
+    this.client.send(putObjectCommand);
 
     const getObjectCommand = new GetObjectCommand({
       Bucket: this.bucketName,
@@ -54,8 +52,6 @@ export class BucketService {
 
     const deleteObjectCommand = new DeleteObjectCommand(params);
 
-    this.client.send(deleteObjectCommand).then(() => {
-      console.log('Deleted');
-    });
+    this.client.send(deleteObjectCommand);
   }
 }

@@ -13,10 +13,4 @@ export class User {
 
   @Column({ name: 'role' })
   role: string;
-
-  @Column({ default: null, name: 'access_key' })
-  access_key: string;
-
-  @Column({ default: null, name: 'refresh_key' })
-  refresh_key: string;
 }

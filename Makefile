@@ -12,6 +12,10 @@ generate:
 	npm run migration:generate
 delete-migrations:
 	rm database/migrations/*
+seed-run:
+	npm run seed:run
+seed-config:
+	npm run seed:config
 start:
 	npm run start
 start-dev:

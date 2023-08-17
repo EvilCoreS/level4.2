@@ -10,11 +10,17 @@ import { getEnvData } from './common/config/config';
 import { AuthModule } from './auth/auth.module';
 import { UserService } from './user/user.service';
 import { UserModule } from './user/user.module';
-
+import * as redisStore from 'cache-manager-redis-store';
+import { CacheModule } from '@nestjs/cache-manager';
+import redisConfig from '../database/redis.config';
 @Module({
   imports: [
     EntityModule,
     ConfigModule.forRoot({ isGlobal: true, load: [getEnvData] }),
+    CacheModule.register({
+      store: redisStore,
+      ...redisConfig,
+    }),
     TypeOrmModule.forRoot(typeormConfig),
     ImagesModule,
     ServeStaticModule.forRoot({

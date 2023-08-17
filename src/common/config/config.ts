@@ -14,6 +14,10 @@ export function getEnvData() {
       name: env['DB_NAME'],
       pass: env['DB_PASS'],
     },
+    redis: {
+      host: env['REDIS_HOST'],
+      port: env['REDIS_PORT'],
+    },
     aws: {
       name: env['AWS_BUCKET_NAME'],
       region: env['AWS_BUCKET_REGION'],
