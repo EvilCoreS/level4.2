@@ -5,6 +5,7 @@ import dataSource from '../database/db.datasource';
 import { ConfigService } from '@nestjs/config';
 import { TransformResponseData } from './common/interceptors/global-data.interceptor';
 import cookieParser from 'cookie-parser';
+import { GlobalFilterException } from './common/exceptions/global-filter.exception';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,7 +16,7 @@ async function bootstrap() {
   if (!port) throw new Error('Missing PORT');
 
   app.setGlobalPrefix('api');
-  // app.useGlobalFilters(new GlobalFilterException());
+  app.useGlobalFilters(new GlobalFilterException());
   app.useGlobalInterceptors(new TransformResponseData());
   app.use(cookieParser());
 

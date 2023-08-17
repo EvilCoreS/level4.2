@@ -3,8 +3,6 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
 
 import { PayloadDto } from '../dto/payload.dto';
-import dataSource from '../../../database/db.datasource';
-import { User } from '../../user/entity/user.entity';
 import { Inject } from '@nestjs/common';
 import { CACHE_MANAGER, CacheStore } from '@nestjs/cache-manager';
 

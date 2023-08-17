@@ -1,25 +1,21 @@
 ## First time installation
 ```bash
- # linux-only
- $ make preinstall-linux
+ # run this for create .env
+ $ make copy-env
+ # go to .env file and fill all variables
 ```
 
 ```bash
- # or run this and fill variables in new .env
- $ make preinstall
- 
- # after run migrations
- $ make migrate
+ # when everything is ready
+ # run this for start building image
+ $ make docker-build
 ```
 
 ## Running the app
 
 ```bash
-# production
-$ make start
-
-# development mode
-$ make start-dev
+# up docker containers
+$ make docker-up
 ```
 
 ## Database management
@@ -33,6 +29,10 @@ $ make rollback
 
 # generate migrations
 $ make generate
+
+#linux-only fast update migration file and start migrate
+# use it when you update or create new entity
+$ make re-migrate
 ```
 
 ## eslint --fix

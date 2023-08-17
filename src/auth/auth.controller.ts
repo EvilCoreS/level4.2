@@ -21,14 +21,10 @@ import { Role } from '../common/enums/role.enum';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  private access_exp;
-
   constructor(
     private configService: ConfigService,
     private authService: AuthService,
-  ) {
-    this.access_exp = configService.get('jwt.access.exp');
-  }
+  ) {}
   @Post('/register')
   async register(
     @Body(ValidationPipe) dto: LoginDto,

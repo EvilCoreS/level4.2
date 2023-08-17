@@ -38,17 +38,6 @@ export class PeopleService {
     });
   }
 
-  // async findAll(offset = 0, count = 10) {
-  //   return this.personRepository.findAll(offset, count, [
-  //     'images',
-  //     'homeworld',
-  //     'films',
-  //     'species',
-  //     'starships',
-  //     'vehicles',
-  //   ]);
-  // }
-
   async findOne(id: number) {
     return this.personRepository.findOneById(id, [
       'images',

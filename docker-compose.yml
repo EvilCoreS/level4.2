@@ -1,0 +1,28 @@
+version: '3.7'
+
+services:
+  mysql-db:
+    image: mysql:latest
+    ports:
+      - ${DB_PORT_LOCAL}:${DB_PORT_DOCKER}
+    volumes:
+      - mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+      MYSQL_DATABASE: ${DB_NAME}
+  redis-db:
+    image: redis/redis-stack-server:latest
+    ports:
+      - ${REDIS_PORT_LOCAL}:${REDIS_PORT_DOCKER}
+    volumes:
+      - cache:/data
+  api:
+    build:
+      context: .
+      target: ${DOCKER_TARGET_BUILD}
+    ports:
+      - ${SERVER_PORT_LOCAL}:${SERVER_PORT_DOCKER}
+volumes:
+  mysql:
+  cache:
+    driver: local

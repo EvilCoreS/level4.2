@@ -51,12 +51,10 @@ export class SwapiSeed implements Seeder {
     const setTotalNum = async (names: string[], i = 0, result = []) => {
       const url = `https://swapi.dev/api/${names[i]}/?format=json&page=1`;
       result.push(axios.get(url));
-      console.log(i, names.length, names[i]);
       if (i < names.length - 1) await setTotalNum(names, i + 1, result);
       else {
         await Promise.all(result).then((data) => {
           data.map((res) => {
-            // console.log(RelationBuilder.getNameEntity(res.config.url));
             RelationBuilder.total[
               RelationBuilder.getNameEntity(res.config.url)
             ] = res.data.count;
@@ -66,23 +64,6 @@ export class SwapiSeed implements Seeder {
     };
 
     await getAllData();
-
-    // await Promise.all(
-    //   names.map(async (name) => {
-    //     for (let i = 1; ; i++) {
-    //       const url = `https://swapi.dev/api/${name}/?format=json&page=${i}`;
-    //       const res: { count: number; next: string | null; results: [] } =
-    //         await axios.get(url).then((response) => response.data);
-    //       res.results.map((data: any) => {
-    //         data['id'] = RelationBuilder.getIdFromUrl(data['url']);
-    //       });
-    //       RelationBuilder.data[name].push(...res.results);
-    //       if (res.next === null) break;
-    //     }
-    //   }),
-    // );
-
-    console.log('data started');
     await Promise.all(
       names.map((name) => {
         const entity = RelationBuilder.returnEntity(name);
@@ -107,24 +88,6 @@ export class SwapiSeed implements Seeder {
       ),
     );
 
-    // console.log(RelationBuilder.data);
-
     console.log(Date.now() - start);
-
-    //
-    // const testArr = [];
-    // await Promise.all(
-    //   names.map(async (name) => {
-    //     const entity = RelationBuilder.returnEntity(name);
-    //     RelationBuilder.data[name].map((data) => {
-    //       const dataToSave = plainToInstance(
-    //         entity,
-    //         RelationBuilder.addRelations(data, name),
-    //       );
-    //       testArr.push(dataToSave);
-    //     });
-    //   }),
-    // );
-    // await connection.manager.save(testArr);
   }
 }

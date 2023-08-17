@@ -24,6 +24,9 @@ build:
 	npm run build
 format:
 	npm run lint
-preinstall-linux: copy-env edit-env install migrate
+docker-build:
+	docker compose build
+docker-up:
+	docker compose up -d
 preinstall: copy-env install
 re-migrate: rollback delete-migrations generate migrate

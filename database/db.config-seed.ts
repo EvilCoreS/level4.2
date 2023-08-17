@@ -1,11 +1,11 @@
 import { getEnvData } from '../src/common/config/config';
 import * as path from 'path';
 
-const { database } = getEnvData();
+const { env, database } = getEnvData();
 
 const seedConfig = {
   type: 'mysql',
-  host: database.host,
+  host: env === 'seed' ? 'localhost' : database.host,
   port: +database.port,
   username: database.user,
   password: database.pass,

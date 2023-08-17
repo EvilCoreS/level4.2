@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entity/user.entity';
 import { plainToClassFromExist, plainToInstance } from 'class-transformer';
@@ -52,20 +48,4 @@ export class UserService {
       where: { username },
     });
   }
-
-  // async updateToken(user: User, [access_key, refresh_key]: string[]) {
-  //   user.access_key = access_key;
-  //   user.refresh_key = refresh_key;
-  //   return dataSource.manager.save(user);
-  // }
-  //
-  // async clearToken(token: string) {
-  //   const user = await dataSource.manager.findOne(User, {
-  //     where: { access_key: token },
-  //   });
-  //   if (!user) throw new InternalServerErrorException();
-  //   user.access_key = null;
-  //   user.refresh_key = null;
-  //   return dataSource.manager.save(user);
-  // }
 }

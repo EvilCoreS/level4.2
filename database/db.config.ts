@@ -1,11 +1,11 @@
 import { DataSourceOptions } from 'typeorm';
 import { getEnvData } from '../src/common/config/config';
 
-const { database } = getEnvData();
+const { env, database } = getEnvData();
 
 const typeormConfig: DataSourceOptions = {
   type: 'mysql',
-  host: database.host,
+  host: env === 'migrate' ? 'localhost' : database.host,
   port: +database.port,
   username: database.user,
   password: database.pass,

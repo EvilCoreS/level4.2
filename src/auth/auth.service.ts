@@ -6,8 +6,6 @@ import {
 } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { LoginDto } from './dto/login.dto';
-import dataSource from '../../database/db.datasource';
-import { User } from '../user/entity/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
@@ -66,7 +64,10 @@ export class AuthService {
 
   async logout(request: Request) {
     const token = this.extractTokenFromHeader(request);
-    return this.cacheManager.del(token);
+    const { name } = await this.decodeToken(token);
+    this.cacheManager.del(name + '_access');
+    this.cacheManager.del(name + '_refresh');
+    return { ok: true };
   }
 
   async refresh(token: string) {
@@ -74,9 +75,7 @@ export class AuthService {
     const refresh_key = await this.cacheManager.get<string>(name + '_refresh');
     if (!refresh_key || token !== refresh_key)
       throw new UnauthorizedException();
-
     const tokens = await this.getToken({ name, sub, role });
-    // this.userService.updateToken(user, tokens);
     this.updateToken(name, tokens);
 
     return this.splitTokensToObj(tokens);
@@ -92,14 +91,6 @@ export class AuthService {
       }),
     ]);
   }
-
-  // async deleteToken(access_key: string) {
-  //   const refresh_key = await this.cacheManager.get<string>(access_key);
-  //   return Promise.all([
-  //     this.cacheManager.del(access_key),
-  //     this.cacheManager.del(refresh_key),
-  //   ]);
-  // }
 
   splitTokensToObj(tokens: string[]) {
     return { access_key: tokens[0], refresh_key: tokens[1] };
