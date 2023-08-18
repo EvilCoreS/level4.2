@@ -1,5 +1,8 @@
 ## First time installation
 ```bash
+ # npm ci
+ $ make install
+ 
  # run this for create .env
  $ make copy-env
  # go to .env file and fill all variables
