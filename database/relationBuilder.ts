@@ -1,3 +1,4 @@
+import { plainToInstance } from 'class-transformer';
 import { SeedDataInterface } from '../src/common/interfaces/seed-data.interface';
 import { Person } from '../src/entity/people/entities/person.entity';
 import { Planet } from '../src/entity/planet/entities/planet.entity';
@@ -5,7 +6,6 @@ import { Film } from '../src/entity/films/entities/film.entity';
 import { Vehicle } from '../src/entity/vehicles/entities/vehicle.entity';
 import { Starship } from '../src/entity/starships/entities/starship.entity';
 import { Species } from '../src/entity/species/entities/species.entity';
-import { plainToInstance } from 'class-transformer';
 
 export class RelationBuilder {
   public static data: SeedDataInterface = {
@@ -15,15 +15,6 @@ export class RelationBuilder {
     species: [],
     starships: [],
     vehicles: [],
-  };
-
-  public static total = {
-    films: -1,
-    people: -1,
-    planets: -1,
-    species: -1,
-    starships: -1,
-    vehicles: -1,
   };
 
   public static relationChecker = {
@@ -66,32 +57,22 @@ export class RelationBuilder {
     return Number(url.split('/')[5]);
   }
 
-  public static getNameEntity(url: string) {
-    return url.split('/')[4];
-  }
-
   public static deleteRelations(entity: any) {
-    const names = [
-      'films',
-      'people',
-      'pilots',
-      'characters',
-      'residents',
-      'planet',
-      'homeworld',
-      'vehicles',
-      'starships',
-      'species',
-      'created',
-      'edited',
-      'url',
-    ];
     const obj = {};
     Object.assign(obj, entity);
-    names.map((name) => {
-      delete obj[name];
-    });
-
+    delete obj['films'];
+    delete obj['people'];
+    delete obj['pilots'];
+    delete obj['characters'];
+    delete obj['residents'];
+    delete obj['planet'];
+    delete obj['homeworld'];
+    delete obj['vehicles'];
+    delete obj['starships'];
+    delete obj['species'];
+    delete obj['created'];
+    delete obj['edited'];
+    delete obj['url'];
     return obj;
   }
 

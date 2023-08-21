@@ -13,8 +13,8 @@ export class TransformResponseData implements NestInterceptor {
         const meta = responseBody.meta;
         delete responseBody.meta;
         return {
-          data: responseBody,
           meta: meta,
+          data: responseBody,
         };
       }),
     );
