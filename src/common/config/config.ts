@@ -24,6 +24,13 @@ export function getEnvData() {
       access_key: env['AWS_ACCESS_KEY'],
       secret_key: env['AWS_SECRET_KEY'],
     },
+    aws_cognito: {
+      user_pool_id: env['AWS_COGNITO_USER_POOL_ID'],
+      client_id: env['AWS_COGNITO_CLIENT_ID'],
+      identity_pool_id: env['AWS_COGNITO_IDENTITY_POOL_ID'],
+      region: env['AWS_COGNITO_REGION'],
+      authority: `https://cognito-idp.${env['AWS_COGNITO_REGION']}.amazonaws.com/${env['AWS_COGNITO_USER_POOL_ID']}/.well-known/jwks.json`,
+    },
     fileSizeMax: env['MAX_FILE_SIZE'],
     jwt: {
       access_key: env['JWT_ACCESS_KEY'],

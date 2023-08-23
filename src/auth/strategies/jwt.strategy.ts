@@ -1,30 +1,39 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
-
 import { PayloadDto } from '../dto/payload.dto';
 import { Inject } from '@nestjs/common';
 import { CACHE_MANAGER, CacheStore } from '@nestjs/cache-manager';
+import { passportJwtSecret } from 'jwks-rsa';
+import { ConfigService } from '@nestjs/config';
 
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: CacheStore) {
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: CacheStore,
+    private configService: ConfigService,
+  ) {
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([
-        ExtractJwt.fromAuthHeaderAsBearerToken(),
-        JwtStrategy.extractJWT,
-      ]),
-      ignoreExpiration: false,
+      secretOrKeyProvider: passportJwtSecret({
+        cache: true,
+        rateLimit: true,
+        jwksRequestsPerMinute: 5,
+        jwksUri: configService.get('aws_cognito.authority'),
+      }),
+
       passReqToCallback: true,
-      secretOrKey: process.env['JWT_ACCESS_KEY'],
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      algorithms: ['RS256'],
     });
   }
 
   async validate(req: Request, payload: PayloadDto) {
+    if (!payload || !payload['username']) return false;
     const token = JwtStrategy.extractTokenFromHeader(req);
-    const access_key = await this.cacheManager.get<string>(
-      payload.name + '_access',
-    );
-    if (!token || !access_key || access_key !== token) return false;
+
+    const username = payload['username'];
+    const access_token = await this.cacheManager.get(username + '_access');
+
+    if (token !== access_token) return false;
 
     req['user'] = payload;
     return payload;

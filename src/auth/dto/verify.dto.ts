@@ -1,14 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class RefreshDto {
-  @ApiProperty()
+export class VerifyDto {
+  @ApiProperty({ example: 'test' })
   @IsString()
   @IsNotEmpty()
   username: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'test' })
   @IsString()
   @IsNotEmpty()
-  refresh_key: string;
+  code: string;
 }

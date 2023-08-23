@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  ForbiddenException,
   Get,
   Post,
   Req,
@@ -16,7 +15,8 @@ import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RefreshDto } from './dto/refresh.dto';
-import { Role } from '../common/enums/role.enum';
+import { RegisterDto } from './dto/register.dto';
+import { VerifyDto } from './dto/verify.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -27,24 +27,10 @@ export class AuthController {
   ) {}
   @Post('/register')
   async register(
-    @Body(ValidationPipe) dto: LoginDto,
-    @Res({ passthrough: true }) response: Response,
+    @Body(ValidationPipe)
+    dto: RegisterDto,
   ) {
-    const token = await this.authService.register(dto, Role.User);
-    this.authService.saveInCookie(response, token);
-    return token;
-  }
-
-  @Post('/registerAdmin')
-  async registerAdmin(
-    @Body(ValidationPipe) dto: LoginDto,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    const env = this.configService.get('env');
-    if (env !== 'dev' && env !== 'development') throw new ForbiddenException();
-    const token = await this.authService.register(dto, Role.Admin);
-    this.authService.saveInCookie(response, token);
-    return token;
+    return await this.authService.register(dto);
   }
 
   @Post('/login')
@@ -52,9 +38,17 @@ export class AuthController {
     @Body(ValidationPipe) dto: LoginDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const tokens = await this.authService.login(dto);
-    this.authService.saveInCookie(response, tokens);
-    return tokens;
+    const result = await this.authService.login(dto);
+    this.authService.saveInCookie(
+      response,
+      this.authService.getTokensFromResultToObj(result),
+    );
+    return result;
+  }
+
+  @Post('/verify')
+  async verify(@Body(ValidationPipe) dto: VerifyDto) {
+    return this.authService.verifyEmail(dto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -69,10 +63,15 @@ export class AuthController {
   }
 
   @Post('/refresh')
-  refresh(
-    @Body(ValidationPipe) { refresh_key }: RefreshDto,
+  async refresh(
+    @Body(ValidationPipe) { username, refresh_key }: RefreshDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    return this.authService.refresh(refresh_key);
+    const result = await this.authService.refresh(refresh_key, username);
+    this.authService.saveInCookie(
+      response,
+      this.authService.getTokensFromResultToObj(result),
+    );
+    return result;
   }
 }

@@ -1,84 +1,127 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import ms from 'ms';
-import { PayloadDto } from './dto/payload.dto';
 import { CACHE_MANAGER, CacheStore } from '@nestjs/cache-manager';
-
+import {
+  CognitoUserAttribute,
+  CognitoUserPool,
+  CognitoUser,
+  AuthenticationDetails,
+  CognitoRefreshToken,
+  CognitoUserSession,
+} from 'amazon-cognito-identity-js';
+import { VerifyDto } from './dto/verify.dto';
 @Injectable()
 export class AuthService {
-  private access_key: string;
   private access_exp: string;
-  private refresh_key: string;
   private refresh_exp: string;
-
+  private userPool: CognitoUserPool;
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
     private configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheManager: CacheStore,
   ) {
-    this.access_key = this.configService.get('jwt.access_key');
     this.access_exp = this.configService.get('jwt.access_exp');
-    this.refresh_key = this.configService.get('jwt.refresh_key');
     this.refresh_exp = this.configService.get('jwt.refresh_exp');
+    this.userPool = new CognitoUserPool({
+      UserPoolId: this.configService.get('aws_cognito.user_pool_id'),
+      ClientId: this.configService.get('aws_cognito.client_id'),
+    });
   }
-  async validateUser(username, pass) {
-    const user = await this.userService.findByUsername(username);
-    if (user && user.password === pass) {
-      const { password, ...result } = user;
-      return result;
-    }
-    return null;
-  }
-
-  async register({ username, password }: LoginDto, role: string) {
-    const user = await this.userService.findByUsername(username);
-    if (!!user) throw new BadRequestException('username is busy');
-
-    const userInfo = { username, password, role };
-    await this.userService.create(userInfo);
-    return this.login({ username, password });
+  async register({ username, email, password }) {
+    return new Promise((resolve, reject) => {
+      return this.userPool.signUp(
+        username,
+        password,
+        [new CognitoUserAttribute({ Name: 'email', Value: email })],
+        null,
+        async (err, result) => {
+          if (!result) {
+            reject(err);
+          } else {
+            resolve(result.user);
+          }
+        },
+      );
+    });
   }
 
   async login({ username, password }: LoginDto) {
-    const user = await this.userService.findByUsername(username);
-    if (!user) throw new BadRequestException('user not found');
-    if (user.password !== password) throw new UnauthorizedException();
+    const authenticationDetails = new AuthenticationDetails({
+      Username: username,
+      Password: password,
+    });
+    const userData = {
+      Username: username,
+      Pool: this.userPool,
+    };
 
-    const payload = { name: user.username, sub: user.id, role: user.role };
-    const tokens = await this.getToken(payload);
+    const newUser = new CognitoUser(userData);
 
-    this.updateToken(username, tokens);
+    const result = (await new Promise((resolve, reject) => {
+      return newUser.authenticateUser(authenticationDetails, {
+        onSuccess: (result) => {
+          resolve(result);
+        },
+        onFailure: (err) => {
+          reject(err);
+        },
+      });
+    })) as CognitoUserSession;
 
-    return this.splitTokensToObj(tokens);
+    await this.updateToken(username, this.getTokensFromResultToArr(result));
+
+    return result;
+  }
+
+  async verifyEmail({ username, code }: VerifyDto) {
+    const cognitoUser = new CognitoUser({
+      Username: username,
+      Pool: this.userPool,
+    });
+
+    return new Promise((resolve, reject) => {
+      cognitoUser.confirmRegistration(code, true, function (err, result) {
+        if (err) {
+          console.log(err);
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
   }
 
   async logout(request: Request) {
-    const token = this.extractTokenFromHeader(request);
-    const { name } = await this.decodeToken(token);
-    this.cacheManager.del(name + '_access');
-    this.cacheManager.del(name + '_refresh');
+    const { user } = request;
+    this.cacheManager.del(user['username'] + '_access');
+    this.cacheManager.del(user['username'] + '_refresh');
     return { ok: true };
   }
 
-  async refresh(token: string) {
-    const { name, sub, role } = await this.decodeToken(token);
-    const refresh_key = await this.cacheManager.get<string>(name + '_refresh');
-    if (!refresh_key || token !== refresh_key)
-      throw new UnauthorizedException();
-    const tokens = await this.getToken({ name, sub, role });
-    this.updateToken(name, tokens);
+  async refresh(token: string, username: string) {
+    const user = new CognitoUser({
+      Username: username,
+      Pool: this.userPool,
+    });
 
-    return this.splitTokensToObj(tokens);
+    const refresh_token = new CognitoRefreshToken({ RefreshToken: token });
+
+    const result = (await new Promise((resolve, reject) => {
+      user.refreshSession(refresh_token, (err, result) => {
+        if (!!err) reject(err);
+        else resolve(result);
+      });
+    })) as CognitoUserSession;
+
+    await this.updateToken(username, this.getTokensFromResultToArr(result));
+
+    return result;
   }
 
   async updateToken(name: string, [access_key, refresh_key]: string[]) {
@@ -92,25 +135,18 @@ export class AuthService {
     ]);
   }
 
-  splitTokensToObj(tokens: string[]) {
-    return { access_key: tokens[0], refresh_key: tokens[1] };
+  getTokensFromResultToArr(result: CognitoUserSession) {
+    return [
+      result.getAccessToken().getJwtToken(),
+      result.getRefreshToken().getToken(),
+    ];
   }
 
-  async decodeToken(token: string) {
-    return this.jwtService.decode(token) as PayloadDto;
-  }
-
-  async getToken(payload: Partial<PayloadDto>) {
-    return Promise.all([
-      this.jwtService.signAsync(payload, {
-        secret: this.access_key,
-        expiresIn: this.access_exp,
-      }),
-      this.jwtService.signAsync(payload, {
-        secret: this.refresh_key,
-        expiresIn: this.refresh_exp,
-      }),
-    ]);
+  getTokensFromResultToObj(result: CognitoUserSession) {
+    return {
+      access_key: result.getAccessToken().getJwtToken(),
+      refresh_key: result.getRefreshToken().getToken(),
+    };
   }
 
   saveInCookie(
@@ -142,10 +178,5 @@ export class AuthService {
 
     response.cookie('access_key', {}, options);
     response.cookie('refresh_key', {}, options);
-  }
-
-  extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
   }
 }
