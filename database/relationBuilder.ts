@@ -6,8 +6,17 @@ import { Film } from '../src/entity/films/entities/film.entity';
 import { Vehicle } from '../src/entity/vehicles/entities/vehicle.entity';
 import { Starship } from '../src/entity/starships/entities/starship.entity';
 import { Species } from '../src/entity/species/entities/species.entity';
+import axios from 'axios';
+
+interface SwapiResponse {
+  count: number;
+  next: string;
+  results: { [key: string]: any }[];
+}
 
 export class RelationBuilder {
+  public static start = Date.now();
+
   public static data: SeedDataInterface = {
     films: [],
     people: [],
@@ -25,6 +34,27 @@ export class RelationBuilder {
     starships: [],
     vehicles: [],
   };
+
+  public static async fetchData(name: string, page = 1, results = []) {
+    const url = `https://swapi.dev/api/${name}/?format=json&page=${page}`;
+    const response: SwapiResponse = await axios
+      .get(url)
+      .then((res) => res.data);
+    results.push(
+      ...response.results.map((entity) => {
+        return {
+          id: this.getIdFromUrl(entity['url']),
+          ...entity,
+        };
+      }),
+    );
+    if (!!response.next) {
+      await this.fetchData(name, ++page, results);
+    } else {
+      this.data[name] = results;
+      return results;
+    }
+  }
 
   public static returnEntity(name: string) {
     let entity;
@@ -58,21 +88,27 @@ export class RelationBuilder {
   }
 
   public static deleteRelations(entity: any) {
-    const obj = {};
-    Object.assign(obj, entity);
-    delete obj['films'];
-    delete obj['people'];
-    delete obj['pilots'];
-    delete obj['characters'];
-    delete obj['residents'];
-    delete obj['planet'];
-    delete obj['homeworld'];
-    delete obj['vehicles'];
-    delete obj['starships'];
-    delete obj['species'];
-    delete obj['created'];
-    delete obj['edited'];
-    delete obj['url'];
+    const allRelations = [
+      'films',
+      'people',
+      'pilots',
+      'characters',
+      'residents',
+      'planet',
+      'homeworld',
+      'vehicles',
+      'starships',
+      'species',
+      'created',
+      'edited',
+      'url',
+    ];
+    const obj = Object.assign({}, entity);
+
+    allRelations.map((name) => {
+      delete obj[name];
+    });
+
     return obj;
   }
 
@@ -136,7 +172,8 @@ export class RelationBuilder {
       }
     });
     this.relationChecker[name.toLowerCase()].push(obj['id']);
-    return obj;
+    const entity = this.returnEntity(name);
+    return plainToInstance(entity, obj);
   }
 
   public static checkIsUrl(str: any) {
